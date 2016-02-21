@@ -1,7 +1,7 @@
 __author__ = 'Ardalan'
 
-CODE_FOLDER = "/home/arda/Documents/kaggle/BNP/"
-# CODE_FOLDER = "/home/arda/Documents/kaggle/BNP/"
+CODE_FOLDER = "/home/arda/Documents/kaggle/bnp/"
+# CODE_FOLDER = "/home/arda/Documents/kaggle/bnp/"
 
 import os, sys, time, re
 if os.getcwd() != CODE_FOLDER: os.chdir(CODE_FOLDER)
@@ -25,6 +25,7 @@ def loadFileinZipFile(zip_filename, filename, dtypes=None, parsedate = None, pas
             return pd.read_csv(myzip.open(filename), sep=',', dtype=dtypes, **kvargs)
 
 class Dummycolumns():
+
 
     def __init__(self, cols=None, prefix='LOL_', nb_features=10):
 
@@ -119,36 +120,58 @@ def FillStrategy(pd_train, pd_test):
                 pd_test[col].fillna(pd_test[col].median(),inplace=True)
     return pd_train, pd_test
 
-class MultiColumnLabelEncoder:
-    def __init__(self, columns = None):
-        self.columns = columns # array of column names to encode
-
-    def fit(self,X,y=None):
-        return self # not relevant here
-
-    def transform(self,X):
-        '''
-        Transforms columns of X specified in self.columns using
-        LabelEncoder(). If no columns specified, transforms all
-        columns in X.
-        '''
-        output = X.copy()
-        if self.columns is not None:
-            for col in self.columns:
-                output[col] = LabelEncoder().fit_transform(output[col])
-        else:
-            for colname,col in output.iteritems():
-                output[colname] = LabelEncoder().fit_transform(col)
-        return output
-
-    def fit_transform(self,X,y=None):
-        return self.fit(X,y).transform(X)
-
-pdtrain = loadFileinZipFile("data/train.csv.zip", "train.csv" )
-pdtest = loadFileinZipFile("data/test.csv.zip", "test.csv" )
+pdtrain = loadFileinZipFile("data/train.csv.zip", "train.csv")
+pdtest = loadFileinZipFile("data/test.csv.zip", "test.csv")
+pdtest['target'] = -1
 
 cat_var = pdtrain.select_dtypes(["object"]).columns
 cont_var = pdtrain.select_dtypes(["float", "int"]).columns
+
+pd_data = pdtrain.append(pdtest)
+
+
+
+# Label Encoding categorical variables
+from sklearn.preprocessing import LabelEncoder
+
+le = LabelEncoder()
+for col in pd_data[cat_var]:
+    print(col)
+    pd_data[col] = le.fit(pd_data[col])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 print("Just Filling...")
