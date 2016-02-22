@@ -1,15 +1,13 @@
 __author__ = 'Ardalan'
 
-CODE_FOLDER = "/home/arda/Documents/kaggle/BNP/"
-# CODE_FOLDER = "/home/arda/Documents/kaggle/BNP/"
+CODE_FOLDER = "/home/arda/Documents/kaggle/bnp/"
 
-import os, sys, time, re
+import os, sys, time, re, zipfile, pickle, operator
 if os.getcwd() != CODE_FOLDER: os.chdir(CODE_FOLDER)
-import re, collections, operator
 import pandas as pd
 import numpy as np
-import zipfile
-import enchant
+
+from xgboost import XGBClassifier
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn import metrics
@@ -27,21 +25,24 @@ from keras.layers import core, embeddings, recurrent, advanced_activations, norm
 from keras.utils import np_utils
 from keras.callbacks import EarlyStopping
 
+def reshapePrediction(ypredproba):
+    result = None
+    if len(ypredproba.shape) > 1:
+        if ypredproba.shape[1] == 1: result = ypredproba[:, 0]
+        if ypredproba.shape[1] == 2: result = ypredproba[:, 1]
+    else:
+        result = ypredproba.ravel()
+    return result
 
 def eval_func(ytrue, ypredproba):
     score = 0
-    if len(ypredproba.shape) > 1:
-        if ypredproba.shape[1] == 1:
-            ypred = np.round(ypredproba.ravel()).astype(int)
-            score =  metrics.accuracy_score(ytrue, ypred)
-        else:
-            ypred = np.round(ypredproba[:,1]).astype(int)
-            score =  metrics.accuracy_score(ytrue, ypred)
-    else:
-        ypred = np.round(ypredproba.ravel()).astype(int)
-        score = metrics.accuracy_score(ytrue, ypred)
-    return score
 
+    ypredproba = reshapePrediction(ypredproba)
+    ypred = np.round(ypredproba).astype(int)
+
+    score = metrics.accuracy_score(ytrue, ypred)
+
+    return score
 def loadFileinZipFile(zip_filename, filename, dtypes=None, parsedate = None, password=None, **kvargs):
     """
     Load file to dataframe.
@@ -54,41 +55,34 @@ def loadFileinZipFile(zip_filename, filename, dtypes=None, parsedate = None, pas
             return pd.read_csv(myzip.open(filename), sep=',', parse_dates=parsedate, dtype=dtypes, **kvargs)
         else:
             return pd.read_csv(myzip.open(filename), sep=',', dtype=dtypes, **kvargs)
-
 def CreateDataFrameFeatureImportance(model, pd_data):
     dic_fi = model.get_fscore()
     df = pd.DataFrame(dic_fi.items(), columns=['feature', 'fscore'])
     df['col_indice'] = df['feature'].apply(lambda r: r.replace('f','')).astype(int)
     df['feat_name'] = df['col_indice'].apply(lambda r: pd_data.columns[r])
     return df.sort('fscore', ascending=False)
+def LoadParseData(name, rl, preproc):
+    data_folder = "data/0_raw_datasets/"
+    pd_data = loadFileinZipFile(data_folder + name+"-"+rl+"-reinforcement-"+preproc+"-preprocessing.csv.zip", name+"-"+rl+"-reinforcement-"+preproc+"-preprocessing.csv", parsedate=['Date'])
 
+    print("class count:")
+    print(pd_data['Category'].value_counts())
 
-def vectorize_DATA(maxFeats=10000):
-    dico_pattern={'match_lowercase_only':'\\b[a-z]+\\b',
-                  'match_word':'\\w{1,}',
-                  'match_word1': '(?u)\\b\\w+\\b',
-                  'match_word_punct': '\w+|[,.?!;]',
-                  'match_NNP': '\\b[A-Z][a-z]+\\b|\\b[A-Z]+\\b',
-                  'match_punct': "[,.?!;'-]"
-                 }
+    #binarise label columns
+    from sklearn.preprocessing import LabelBinarizer
+    le = LabelBinarizer(neg_label=0, pos_label=1)
+    pd_data['Category'] = le.fit_transform(pd_data['Category'])
 
-    vocab = "abcdefghijklmnopqrstuvwxyz?!-:)("
-    preprocessing = TfidfVectorizer(input='content', encoding='utf-8', decode_error='strict', strip_accents=None,
-                          lowercase=False, preprocessor=None, tokenizer=None, analyzer='word',
-                          stop_words=None, ngram_range=(1, 1), token_pattern=dico_pattern['match_word1'],
-                          max_df=1.0, min_df=1, max_features=maxFeats, vocabulary=None, binary=False,
-                          norm='l2', use_idf=False, smooth_idf=False, sublinear_tf=False)
+    #replacing nan => ''
+    pd_data['Header'].fillna('', inplace=True)
+    pd_data['Body'].fillna('', inplace=True)
+    pd_data['Sentence'] = pd_data['Header'] + " " + pd_data['Body']
 
-    X = preprocessing.fit_transform(pd_data['Sentence'])
-    Y = pd_data['Category'].values
-
-    return X, Y
-
+    return pd_data, le
 def xgb_accuracy(ypred, dtrain):
         ytrue = dtrain.get_label().astype(int)
         ypred = np.round(ypred).astype(int)
         return 'acc', -metrics.accuracy_score(ytrue, ypred)
-
 class NN():
 
     def __init__(self, input_dim, output_dim,
@@ -137,40 +131,40 @@ class NN():
         model = Sequential()
 
         model.add(core.Dense(hidden_units[0], input_dim=input_dim, W_regularizer=None, ))
-        model.add(core.Activation(activation[0]))
+        model.add(activation[0])
         model.add(normalization.BatchNormalization())
         # model.add(core.Dropout(dropout[0]))
 
         for i in range(1, len(activation) - 1):
             model.add(core.Dense(hidden_units[i], input_dim=hidden_units[i-1], W_regularizer=None))
-            model.add(core.Activation(activation[i]))
+            model.add(activation[i])
             model.add(normalization.BatchNormalization())
             # model.add(core.Dropout(dropout[i]))
 
         model.add(core.Dense(output_dim, input_dim=hidden_units[-1], W_regularizer=None))
-        model.add(core.Activation(activation[1]))
+        model.add(core.Activation(activation[-1]))
         model.compile(loss=loss, optimizer=optimizer, class_mode=class_mode)
 
         return model
 
 
-    def fit(self, X, y, eval_set=None, class_weight=None):
+    def fit(self, X, y, eval_set=None, class_weight=None, show_accuracy=True):
 
 
         if self.loss == 'categorical_crossentropy':
-            y = to_categorical(y)
+            y = np_utils.to_categorical(y)
 
         if eval_set != None and self.loss == 'categorical_crossentropy':
-            eval_set = (eval_set[0], to_categorical(eval_set[1]))
+            eval_set = (eval_set[0], np_utils.to_categorical(eval_set[1]))
 
         self.model = self._build_model(self.input_dim,self.output_dim,self.hidden_units,self.activation,
                                        self.dropout, self.loss, self.optimizer, self.class_mode)
 
         if eval_set !=None:
             early_stopping = EarlyStopping(monitor='val_loss', patience=self.esr, verbose=1, mode='min')
-            logs = self.model.fit(X, y, self.batch_size, self.nb_epoch, self.verbose, validation_data=eval_set, callbacks=[early_stopping])
+            logs = self.model.fit(X, y, self.batch_size, self.nb_epoch, self.verbose, validation_data=eval_set, callbacks=[early_stopping], show_accuracy=True)
         else:
-            logs = self.model.fit(X, y, self.batch_size, self.nb_epoch, self.verbose)
+            logs = self.model.fit(X, y, self.batch_size, self.nb_epoch, self.verbose, show_accuracy=True)
 
         return logs
 
@@ -180,104 +174,123 @@ class NN():
 
         return prediction
 
-
-# def LoadParseData(name, rl, preproc):
-data_folder = "data/"
-pdtrain = loadFileinZipFile(data_folder + "train.csv.zip", "train.csv" )
-pdtest = loadFileinZipFile(data_folder + "test.csv.zip", "test.csv" )
-
-
-print("class count:")
-print(pd_data['Category'].value_counts())
-
-#binarise label columns
-from sklearn.preprocessing import LabelBinarizer
-le = LabelBinarizer(neg_label=0, pos_label=1)
-pd_data['Category'] = le.fit_transform(pd_data['Category'])
-
-#replacing nan => ''
-pd_data['Header'].fillna('', inplace=True)
-pd_data['Body'].fillna('', inplace=True)
-pd_data['Sentence'] = pd_data['Header'] + " " + pd_data['Body']
-
-    # return pd_data, le
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ##################################################################################
 # Params
 ##################################################################################
-name = "meetic"
-rl = "with"
-preproc = "with"
 
-pd_data, le = LoadParseData(name, rl, preproc)
-
-X, Y = vectorize_DATA(maxFeats=None)
-
-DATA = (X, Y)
 
 #General params
-n_folds = 5
+n_folds = 10
 test_size = 0.20
-nthread = 12
-seed = 456
+nthread = 6
+seed = 123
+
+
+filename = 'pd_data_[LEcat].p'
+
+pd_data = pd.read_hdf(CODE_FOLDER + "data/" + filename)
+
+pd_train = pd_data[pd_data.target >= 0]
+pd_test = pd_data[pd_data.target == -1]
+
+Y = pd_train['target'].values
+X = np.array(pd_train.drop(['ID', 'target'],1))
+test_idx = pd_test['ID'].values
+X_test = np.array(pd_test.drop(['ID'],1))
+
+
+pd_data, le = LoadParseData(name, rl, preproc)
+X, Y = vectorize_DATA()
+DATA = (X.todense(), Y)
+print(X.shape)
+
+
+# from sklearn.ensemble import ExtraTreesClassifier
+# from sklearn.feature_selection import SelectFromModel
+# model = SelectFromModel(ExtraTreesClassifier(max_depth=50, n_estimators=500, verbose=1, n_jobs=nthread),
+#                         prefit=False, threshold='mean')
+# X_new = model.fit_transform(X, Y)
+# print(X_new.shape)
 
 
 
-def NNmodels():
+# for filename in os.listdir(CODE_FOLDER + 'data/3_sklearnGSscores/'):
+#     print(filename)
+#     grid = pickle.load(open(CODE_FOLDER + 'data/3_sklearnGSscores/' + filename, 'rb'))
+#     print(report(grid.grid_scores_, 1))
+
+
+
+def NNmodels(X, Y):
     """NN list of models"""
 
+    # from sklearn.preprocessing import StandardScaler
+    # scl = StandardScaler()
+    # X = scl.fit_transform(X.todense())
+    # DATA = (X, Y)
 
     #NN params
-    nb_epoch = 2
-    batch_size = 2048
+    nb_epoch = 20
+    batch_size = 256
     esr = 5
 
-    # param1 = {
-    #     'hidden_units': (256, 256),
-    #     'activation': (core.activations.prelu, core.activations.prelu, core.activations.sigmoid),
-    #     'dropout': (0.01, 0.01), 'optimizer': adam(lr=0.01), 'nb_epoch': nb_epoch,
-    # }
     param1 = {
-        'hidden_units': (124, 124),
-        'activation': (core.activations.relu, core.activations.relu, core.activations.sigmoid),
-        'dropout': (0, 0), 'optimizer': Adam(), 'nb_epoch': nb_epoch,
+        'hidden_units': (2048, 2048),
+        'activation': (advanced_activations.PReLU(), advanced_activations.PReLU(), core.activations.sigmoid),
+        'dropout': (0., 0.), 'optimizer': RMSprop(), 'nb_epoch': nb_epoch,
     }
+    param2 = {
+    'hidden_units': (512, 512),
+    'activation': (advanced_activations.PReLU(), advanced_activations.PReLU(), core.activations.sigmoid),
+    'dropout': (0, 0), 'optimizer': RMSprop(), 'nb_epoch': nb_epoch,
+    }
+    param3 = {
+    'hidden_units': (256, 256),
+    'activation': (advanced_activations.PReLU(), advanced_activations.PReLU(), core.activations.sigmoid),
+    'dropout': (0, 0), 'optimizer': RMSprop(), 'nb_epoch': nb_epoch,
+    }
+    # param4 = {
+    #     'hidden_units': (256, 256),
+    #     'activation': (advanced_activations.PReLU(), advanced_activations.PReLU(), core.activations.sigmoid),
+    #     'dropout': (0, 0), 'optimizer': RMSprop(), 'nb_epoch': nb_epoch,
+    # }
+    # param5 = {
+    # 'hidden_units': (256, 256, 128),
+    # 'activation': (advanced_activations.PReLU(), advanced_activations.PReLU(),
+    #                advanced_activations.PReLU(), core.activations.sigmoid),
+    # 'dropout': (0, 0, 0), 'optimizer': Adam(lr=0.0001), 'nb_epoch': nb_epoch,
+    # }
     clfs = [
-        [DATA, NN(input_dim=DATA[0].shape[1], output_dim=1, batch_size=batch_size,
-                  early_stopping_epoch=esr, verbose=1, loss='binary_crossentropy',
-                  class_mode='binary', **param1)],
+        [DATA, NN(input_dim=DATA[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param1)],
+        [DATA, NN(input_dim=DATA[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param2)],
+        [DATA, NN(input_dim=DATA[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param3)],
+        # [DATA, NN(input_dim=DATA[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param4)],
+        # [DATA, NN(input_dim=DATA[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param5)],
+
     ]
     return clfs
 
 def SKLEARNmodels():
 
     nb = naive_bayes.MultinomialNB(alpha=.1, fit_prior=False, class_prior=None)
-    rf = ensemble.RandomForestClassifier(n_estimators=100, max_depth=100, n_jobs=12)
-    lr = linear_model.LogisticRegression(penalty="l2", dual=False, tol=1e-4, C=5., random_state=123, max_iter=100, n_jobs=-1)
+    rf = ensemble.RandomForestClassifier(class_weight=None, n_estimators=500, max_depth=30, n_jobs=nthread, random_state=seed)
+    lr = linear_model.LogisticRegression(penalty="l1", dual=False, tol=1e-4, C=5., random_state=seed, max_iter=1000, n_jobs=nthread, class_weight=None)
+    # ada = ensemble.AdaBoostClassifier(base_estimator=rf,n_estimators=30)
+    # xgb = XGBClassifier(max_depth=10, learning_rate=0.01, n_estimators=10000, objective='binary:logistic', nthread=nthread,
+    #                     subsample=.9, seed=seed)
+    xgb = XGBClassifier(max_depth=20, learning_rate=0.01, n_estimators=10000, objective='binary:logistic', nthread=nthread,
+                        subsample=0.9, seed=seed)
+
+    voting = ensemble.VotingClassifier([('lr', lr), ('xgb', xgb)], voting='soft')
+
 
     clfs = [
         [DATA, nb],
+        [DATA, rf],
         [DATA, lr],
-        # [DATA, nb3],
-        [DATA, ensemble.VotingClassifier([('nb', nb), ('rf', lr)], voting='soft')]
-
-        # [DATA, ensemble.RandomForestClassifier(class_weight='balanced',n_estimators=100, criterion="gini", max_depth=100, n_jobs=12, verbose=0, random_state=seed)],
-        # [DATA, ensemble.ExtraTreesClassifier(n_estimators=100, criterion="gini", max_depth=100, n_jobs=12, verbose=0, random_state=seed)],
-        # [DATA, linear_model.LogisticRegression(n_jobs=-1, random_state=123)]
+        # [DATA, ada],
+        [DATA, xgb],
+        [DATA, voting]
     ]
     return clfs
 
@@ -302,7 +315,10 @@ def printResults(dic_logs, l_clf_names=[]):
 
         for fold_idx in dic_logs[clf_name]['fold']:
 
-            ypredproba = dic_logs[clf_name]['ypredproba'][fold_idx][:,1]
+
+            ypredproba = dic_logs[clf_name]['ypredproba'][fold_idx]
+            ypredproba = reshapePrediction(ypredproba)
+
             ypred = np.round(ypredproba).astype(int)
             yval = dic_logs[clf_name]['yval'][fold_idx]
 
@@ -337,9 +353,9 @@ def printResults(dic_logs, l_clf_names=[]):
 
     return '\n'.join(output_string)
 
-# clfs = XGBmodels()
-# clfs = NNmodels()
+# clfs = NNmodels(X, Y)
 clfs = SKLEARNmodels()
+
 
 
 ##################################################################################
@@ -379,14 +395,14 @@ for clf_indice, data_clf in enumerate(clfs):
 
 
         try: #xgb
-            clf.fit(xtrain, ytrain, eval_set=[(xval, yval)], eval_metric=xgb_accuracy, early_stopping_rounds=34, verbose=True)
+            clf.fit(xtrain, ytrain, eval_set=[(xval, yval)], eval_metric=xgb_accuracy, early_stopping_rounds=360, verbose=True)
 
-            dic_logs[clf_name]['best_epoch'].append(clf.model.best_iteration)
-            dic_logs[clf_name]['best_val_metric'].append(clf.model.best_score)
+            dic_logs[clf_name]['best_epoch'].append(clf.best_iteration)
+            dic_logs[clf_name]['best_val_metric'].append(clf.best_score)
 
         except:
             try: #NN
-                logs = clf.fit(xtrain, ytrain, eval_set=(xval, yval))
+                logs = clf.fit(xtrain, ytrain, eval_set=(xval, yval), show_accuracy=True)
 
                 dic_logs[clf_name]['best_epoch'].append(np.argmin(logs.history['val_loss']))
                 dic_logs[clf_name]['best_val_metric'].append(np.min(logs.history['val_loss']))
@@ -398,9 +414,11 @@ for clf_indice, data_clf in enumerate(clfs):
                     print('no fit')
 
         ypredproba = clf.predict_proba(xval)
+        ypredproba = reshapePrediction(ypredproba)
+
         error = eval_func(yval, ypredproba)
         print(error)
-        print(metrics.confusion_matrix(yval, ypredproba.argmax(1)))
+        print(metrics.confusion_matrix(yval, ypredproba.round()))
 
         dic_logs[clf_name]['fold'].append(fold_indice)
         dic_logs[clf_name]['ypredproba'].append(ypredproba)
@@ -408,6 +426,31 @@ for clf_indice, data_clf in enumerate(clfs):
         dic_logs[clf_name]['eval_func'].append(error)
 
     print(printResults(dic_logs, l_clf_names=[clf_name]))
+
+
+def saveDicLogs(dic_logs, filename):
+
+    folder2save = CODE_FOLDER + 'data/4_diclogs/'
+    if os.path.exists(folder2save + filename):
+        print('file exist !')
+        raise BrokenPipeError
+    else:
+        proof_code = open(CODE_FOLDER + 'code/main_CV.py', 'rb').read()
+        open(folder2save + filename + '.py', 'wb').write(proof_code)
+        pickle.dump(dic_logs, open(folder2save + filename, 'wb'))
+    return
+
+
+saveDicLogs(dic_logs, filename)
+
+
+
+
+
+
+
+
+
 
 
 
@@ -422,119 +465,4 @@ for clf_indice, data_clf in enumerate(clfs):
 # print(np.bincount(ypred))
 # print(metrics.confusion_matrix(yval, ypred))
 # print(metrics.precision_recall_fscore_support(yval, ypred, average='binary', pos_label=0))
-
-
-##################################################################################
-# Plot
-##################################################################################
-def confidence_vs_automation(ypredproba=None, yval=None):
-    """
-    ypredproba: classifier probabilities
-    yval: ground truth
-    return: pandas DataFrame containing:
-            accuracy, precision and recall for each automation %
-    """
-    pd_conf = pd.DataFrame({'ypredproba': ypredproba, 'yval': yval})
-    pd_conf['confidence'] =  100*np.abs(2*pd_conf['ypredproba'] - 1)
-    pd_conf = pd_conf.sort_values(by='confidence', ascending=False).reset_index(drop=True)
-
-
-    l_acc = []
-    l_precision_0 = []
-    l_precision_1 = []
-    l_recall_0 = []
-    l_recall_1 = []
-
-    l_automation_threshold = []
-
-    for automation_threshold in range(100, 10, -1):
-        l_automation_threshold.append(automation_threshold)
-
-        #selecting samples that are above the threshold
-        n_sample = int(np.round( 1e-2*automation_threshold * len(pd_conf) ))
-        pd_sample = pd_conf.head(n_sample)
-
-
-        ypred = pd_sample['ypredproba'].round()
-        yval = pd_sample['yval']
-
-        #get metrics on sampled data
-        l_acc.append(metrics.accuracy_score(ypred, yval))
-        precision_0, recall_0, f1_0, _ = metrics.precision_recall_fscore_support(yval, ypred, average='binary', pos_label=0)
-        precision_1, recall_1, f1_1, _ = metrics.precision_recall_fscore_support(yval, ypred, average='binary', pos_label=1)
-
-        l_precision_0.append(precision_0)
-        l_precision_1.append(precision_1)
-        l_recall_0.append(recall_0)
-        l_recall_1.append(recall_1)
-
-    pd_result = pd.DataFrame(
-        {
-            'acc': l_acc,
-            'precision_0': l_precision_0,
-            'precision_1': l_precision_1,
-            'recall_0': l_recall_0,
-            'recall_1': l_recall_1,
-            'ratio_used': l_automation_threshold
-        })
-    return pd_result
-
-def avgeragingListOfDataFrame(l_df):
-    avgDataFrame = l_df[0]
-
-    for i in range(1, len(l_df)):
-        avgDataFrame = avgDataFrame.add(l_df[i])
-
-    avgDataFrame = avgDataFrame / len(l_df)
-
-    return avgDataFrame
-
-def plot_report(f, axs, pd_result, clf_name=None, titles=[], ycols=[]):
-
-    for i, (ax, ycol, title) in enumerate(zip(axs, ycols, titles)):
-
-        xvalues = pd_result.index.values
-        yvalues = pd_result[ycol]
-        ax.set_title(title)
-
-        ax.plot(xvalues, yvalues, label=clf_name)
-        ax.legend(loc=2)
-
-    # Fine-tune sfigure; make subplots close to each other and hide x ticks for
-    # all but bottom plot.
-    # f.subplots_adjust(hspace=0)
-    plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
-
-    # f.axes[0].set_xticks(range(100, 0, -10))
-    f.axes[0].set_xticklabels(range(100, 0, -5))
-
-    return f
-
-import matplotlib.pyplot as plt
-plt.style.use('ggplot')
-plt.close('all')
-
-ycols = ['acc', 'precision_0', 'precision_1']
-titles = ycols
-
-f, axs = plt.subplots(nrows=len(ycols), ncols=1, sharex=True, sharey=False, figsize= (10,10))
-
-
-for clf_name in dic_logs:
-    l_pd_result = []
-    print(clf_name)
-
-    for fold_idx in dic_logs[clf_name]['fold']:
-        ypredproba = dic_logs[clf_name]['ypredproba'][fold_idx]
-        yval = dic_logs[clf_name]['yval'][fold_idx]
-        pd_result = confidence_vs_automation(ypredproba[:,1], yval)
-
-        l_pd_result.append(pd_result)
-
-    pd_result_averaged = avgeragingListOfDataFrame(l_pd_result)
-    f = plot_report(f, axs, pd_result_averaged, clf_name[:4], titles, ycols)
-
-
-f.savefig('sdfsdf.png')
-
 
