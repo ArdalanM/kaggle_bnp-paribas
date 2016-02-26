@@ -1,13 +1,13 @@
 __author__ = 'Ardalan'
 
-CODE_FOLDER = "/home/arda/Documents/kaggle/bnp/"
 # CODE_FOLDER = "/home/arda/Documents/kaggle/bnp/"
+CODE_FOLDER = "/home/ardalan/Documents/kaggle/bnp/"
 
 import os, sys, time, re
 if os.getcwd() != CODE_FOLDER: os.chdir(CODE_FOLDER)
 import re, collections, operator
 import pandas as pd
-import numpy as np
+import numpy as np2
 import zipfile
 
 
@@ -127,10 +127,6 @@ pdtest['target'] = -1
 cat_var = pdtrain.select_dtypes(["object"]).columns
 cont_var = pdtrain.select_dtypes(["float", "int"]).columns
 
-
-
-
-
 # Label Encoding categorical variables
 pd_data = pdtrain.append(pdtest)
 for col in pd_data[cat_var]:
@@ -140,15 +136,16 @@ pd_data.to_hdf(CODE_FOLDER + 'data/pd_data_[LEcat].p', 'wb')
 
 
 
-
 # One Hot Cat var
 maxCategories = 300
-
 pd_data = pdtrain.append(pdtest)
 cols2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) <= maxCategories]
 colsNot2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) > maxCategories]
 for col in pd_data[colsNot2dummy]: pd_data[col] = pd.factorize(pd_data[col])[0]
 pd_data = pd.get_dummies(pd_data, dummy_na=True, columns=cols2dummy)
+
+
+
 pd_data.to_hdf(CODE_FOLDER + 'data/pd_data_[DummyCat-thresh300].p', 'wb')
 
 
