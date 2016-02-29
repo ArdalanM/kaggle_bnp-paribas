@@ -1,0 +1,357 @@
+Using Theano backend.
+Using gpu device 0: GeForce GTX 960M (CNMeM is disabled, CuDNN not available)
+--------------------------------------------------
+Classifier [0]
+(114321, 507)
+SGDClassifier(alpha=0.0001, average=False, class_weight='balanced',
+       epsilon=0.1, eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='log', n_iter=1000, n_jobs=8,
+       penalty='l2', power_t=0.5, random_state=123, shuffle=True,
+       verbose=0, warm_start=False)
+Fold [0]
+10.7132109715
+Fold [1]
+8.60595971168
+Fold [2]
+8.61841176354
+Fold [3]
+8.43270265322
+Fold [4]
+23.3699648663
+Fold [5]
+8.34871135021
+Fold [6]
+12.6430047069
+Fold [7]
+21.4446197309
+Fold [8]
+8.72081552595
+Fold [9]
+21.407157859
+[[ 5015   445]
+ [13820  3585]]
+acc|logloss = 0.677|10.713
+--------------------------------------------------
+Classifier [1]
+(114321, 507)
+RandomForestClassifier(bootstrap=True, class_weight='balanced',
+            criterion='gini', max_depth=None, max_features='auto',
+            max_leaf_nodes=None, min_samples_leaf=1, min_samples_split=2,
+            min_weight_fraction_leaf=0.0, n_estimators=1000, n_jobs=8,
+            oob_score=False, random_state=123, verbose=0, warm_start=False)
+Fold [0]
+0.46863780123
+Fold [1]
+0.469823038795
+Fold [2]
+0.468707569887
+Fold [3]
+0.470492491813
+Fold [4]
+0.464380571687
+Fold [5]
+0.468775129813
+Fold [6]
+0.467606243797
+Fold [7]
+0.46757943947
+Fold [8]
+0.465582806329
+Fold [9]
+0.466408993961
+[[  909  4551]
+ [  463 16942]]
+acc|logloss = 0.780|0.469
+--------------------------------------------------
+Classifier [2]
+(114321, 507)
+RandomForestClassifier(bootstrap=True, class_weight='balanced',
+            criterion='entropy', max_depth=None, max_features='auto',
+            max_leaf_nodes=None, min_samples_leaf=1, min_samples_split=2,
+            min_weight_fraction_leaf=0.0, n_estimators=1000, n_jobs=8,
+            oob_score=False, random_state=123, verbose=0, warm_start=False)
+Fold [0]
+0.466390073516
+Fold [1]
+0.468033375504
+Fold [2]
+0.466247902319
+Fold [3]
+0.468565862117
+Fold [4]
+0.462131724585
+Fold [5]
+0.466712353008
+Fold [6]
+0.465377528437
+Fold [7]
+0.465244940342
+Fold [8]
+0.463030634453
+Fold [9]
+0.46373975038
+[[  952  4508]
+ [  449 16956]]
+acc|logloss = 0.782|0.466
+--------------------------------------------------
+Classifier [3]
+(114321, 507)
+ExtraTreesClassifier(bootstrap=False, class_weight='balanced',
+           criterion='gini', max_depth=None, max_features='auto',
+           max_leaf_nodes=None, min_samples_leaf=1, min_samples_split=2,
+           min_weight_fraction_leaf=0.0, n_estimators=1000, n_jobs=8,
+           oob_score=False, random_state=123, verbose=1, warm_start=False)
+Fold [0]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.3s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.2s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.7min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.9s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.5s finished
+0.467096048358
+Fold [1]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.4s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.6s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.7min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    1.9s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.5s finished
+0.472741983542
+Fold [2]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.5s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.7min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    1.9s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.4s finished
+0.468844562594
+Fold [3]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.4s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.2s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.7min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    1.9s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.5s finished
+0.47104223244
+Fold [4]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.5s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.5s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.7min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.5s finished
+0.468432416659
+Fold [5]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.4s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.6s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.7min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    1.9s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.4s finished
+0.468569503721
+Fold [6]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.4s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.7s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.7min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.5s finished
+0.466419932116
+Fold [7]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.4s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.5s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.7min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.5s finished
+0.467255135393
+Fold [8]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.3s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.4s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.7min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    1.9s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.5s finished
+0.464762857406
+Fold [9]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.4s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.5s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.7min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    1.9s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.4s finished
+0.468601641356
+[[ 1052  4408]
+ [  592 16813]]
+acc|logloss = 0.782|0.467
+--------------------------------------------------
+Classifier [4]
+(114321, 507)
+ExtraTreesClassifier(bootstrap=False, class_weight='balanced',
+           criterion='entropy', max_depth=None, max_features='auto',
+           max_leaf_nodes=None, min_samples_leaf=1, min_samples_split=2,
+           min_weight_fraction_leaf=0.0, n_estimators=1000, n_jobs=8,
+           oob_score=False, random_state=123, verbose=1, warm_start=False)
+Fold [0]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.8s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   32.4s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.9min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.9s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.2s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.9s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    5.0s finished
+0.466910957599
+Fold [1]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.8s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   32.0s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.9min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.9s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.471861651402
+Fold [2]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    7.0s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   33.6s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.4min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  3.0min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.9s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.467054611019
+Fold [3]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.9s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   32.3s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.9min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.9s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.1s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.469759128649
+Fold [4]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    7.1s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   33.4s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  3.0min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.9s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.467232550238
+Fold [5]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.8s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   32.6s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.9min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.467485500906
+Fold [6]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.8s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   32.0s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.9min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.9s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.465848823059
+Fold [7]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.9s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   32.4s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.9min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.9s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.46747075732
+Fold [8]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.8s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   32.6s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.9min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.9s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.7s finished
+0.463845954998
+Fold [9]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.9s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   32.3s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.3min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.3min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.9min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.9s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.467282083476
+[[ 1071  4389]
+ [  592 16813]]
+acc|logloss = 0.781|0.467

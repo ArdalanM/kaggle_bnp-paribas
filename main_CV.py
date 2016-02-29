@@ -1,5 +1,3 @@
-from keras.backend.tensorflow_backend import reshape
-
 __author__ = 'Ardalan'
 
 CODE_FOLDER = "/home/ardalan/Documents/kaggle/bnp/"
@@ -72,13 +70,13 @@ def LoadParseData(filename):
     pd_train = pd_data[pd_data.target >= 0]
     pd_test = pd_data[pd_data.target == -1]
 
-    Y = pd_train['target'].values
+    Y = pd_train['target'].values.astype(int)
     test_idx = pd_test['ID'].values
 
     X = np.array(pd_train.drop(['ID', 'target'],1))
     X_test = np.array(pd_test.drop(['ID','target'], 1))
 
-    return X, Y, X_test, test_idx
+    return X, Y, X_test, test_idx, pd_data
 def xgb_accuracy(ypred, dtrain):
         ytrue = dtrain.get_label().astype(int)
         ypred = np.round(ypred).astype(int)
@@ -162,9 +160,9 @@ class NN():
 
         if eval_set !=None:
             early_stopping = EarlyStopping(monitor='val_loss', patience=self.esr, verbose=1, mode='min')
-            logs = self.model.fit(X, y, self.batch_size, self.nb_epoch, self.verbose, validation_data=eval_set, callbacks=[early_stopping], show_accuracy=True)
+            logs = self.model.fit(X, y, self.batch_size, self.nb_epoch, self.verbose, validation_data=eval_set, callbacks=[early_stopping], show_accuracy=True, class_weight=class_weight)
         else:
-            logs = self.model.fit(X, y, self.batch_size, self.nb_epoch, self.verbose, show_accuracy=True)
+            logs = self.model.fit(X, y, self.batch_size, self.nb_epoch, self.verbose, show_accuracy=True, class_weight=class_weight)
 
         return logs
 
@@ -265,9 +263,9 @@ class NN():
 
         if eval_set !=None:
             early_stopping = EarlyStopping(monitor='val_loss', patience=self.esr, verbose=1, mode='min')
-            logs = self.model.fit(X, y, self.batch_size, self.nb_epoch, self.verbose, validation_data=eval_set, callbacks=[early_stopping], show_accuracy=True)
+            logs = self.model.fit(X, y, self.batch_size, self.nb_epoch, self.verbose, validation_data=eval_set, callbacks=[early_stopping], show_accuracy=True, shuffle=True)
         else:
-            logs = self.model.fit(X, y, self.batch_size, self.nb_epoch, self.verbose, show_accuracy=True)
+            logs = self.model.fit(X, y, self.batch_size, self.nb_epoch, self.verbose, show_accuracy=True, shuffle=True)
 
         return logs
 
@@ -276,180 +274,131 @@ class NN():
         prediction = self.model.predict_proba(X, verbose=0)
 
         return prediction
-def NNmodels(X, Y):
+def NNmodels():
     """NN list of models"""
-
-    # from sklearn.preprocessing import StandardScaler
-    # scl = StandardScaler()
-    # X = scl.fit_transform(X.todense())
-    DATA = (X, Y)
-
     #NN params
-    nb_epoch = 5
-    batch_size = 32
+    nb_epoch = 100
+    batch_size = 256
     esr = 40
 
     param1 = {
-        'hidden_units': (512, 512),
-        'activation': (advanced_activations.PReLU(), advanced_activations.PReLU(), core.activations.sigmoid),
-        'dropout': (0., 0.), 'optimizer': RMSprop(lr=0.0005), 'nb_epoch': nb_epoch,
+        'hidden_units': (128, 64, 32),
+        'activation': (advanced_activations.PReLU(), advanced_activations.PReLU(), advanced_activations.PReLU(),
+                       core.activations.sigmoid),
+        'dropout': (0., 0.), 'optimizer': SGD(), 'nb_epoch': nb_epoch,
     }
-    # param1 = {
-    # 'hidden_units': (256, 256),
-    # 'activation': (advanced_activations.PReLU(), advanced_activations.PReLU() , core.activations.sigmoid),
-    # 'dropout': (0., 0.), 'optimizer': RMSprop(lr=0.0005), 'nb_epoch': nb_epoch,
-    # }
-
     clfs = [
         [DATA, NN(input_dim=DATA[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param1)],
     ]
     return clfs
 def SKLEARNmodels():
 
-    # sgd = linear_model.SGDClassifier(loss='modified_huber', n_iter=20, class_weight=None, penalty='l2', n_jobs=nthread, random_state=seed)
-    # nb = naive_bayes.MultinomialNB(alpha=1., fit_prior=True, class_prior=None)
-    # lr = linear_model.LogisticRegression(penalty="l1", dual=False, tol=1e-4, C=5., random_state=seed, max_iter=1000, n_jobs=nthread, class_weight='balanced')
-    # rf = ensemble.RandomForestClassifier(criterion="gini", class_weight='balanced', n_estimators=100, max_depth=30, n_jobs=nthread, random_state=seed)
-    # ada = ensemble.AdaBoostClassifier(base_estimator=rf,n_estimators=30)
-    xgb = XGBClassifier(max_depth=10, learning_rate=0.01, n_estimators=10000, objective='binary:logistic', nthread=nthread,
-                        subsample=.7, seed=seed)
-    # xgb = XGBClassifier(max_depth=20, learning_rate=0.01, n_estimators=10000, objective='binary:logistic', nthread=nthread,
-    #                     subsample=0.9, seed=seed)
-
-    # voting = ensemble.VotingClassifier([('lr', lr), ('xgb', xgb)], voting='soft')
+    sgd = linear_model.SGDClassifier(loss='log', n_iter=1000, class_weight='balanced', penalty='l2', n_jobs=nthread, random_state=seed)
+    extra = ensemble.ExtraTreesClassifier(criterion='gini', n_estimators=1000, class_weight='balanced', n_jobs=nthread, verbose=1, random_state=seed)
+    extra1 = ensemble.ExtraTreesClassifier(criterion='entropy',n_estimators=1000, class_weight='balanced', n_jobs=nthread, verbose=1, random_state=seed)
+    rf = ensemble.RandomForestClassifier(criterion="gini", class_weight='balanced', n_estimators=1000, max_depth=None, n_jobs=nthread, random_state=seed)
+    rf1 = ensemble.RandomForestClassifier(criterion="entropy", class_weight='balanced', n_estimators=1000, max_depth=None, n_jobs=nthread, random_state=seed)
 
 
     clfs = [
-        # [DATA, sgd],
-        # [DATA, nb],
-        # [DATA, rf],
-        # [DATA, lr],
-        # [DATA, ada],
-        [DATA, xgb],
-        # [DATA, voting]
+        [DATA, sgd],
+        [DATA, rf],
+        [DATA, rf1],
+        [DATA, extra],
+        [DATA, extra1],
     ]
     return clfs
-def printResults(dic_logs, l_clf_names=[]):
-    output_string=[]
-
-    for clf_name in l_clf_names:
-        l_pd_result = []
-        output_string.append(clf_name)
-
-        l_roc = []
-        l_acc = []
-        l_precision_0 = []
-        l_precision_1 = []
-        l_recall_0 = []
-        l_recall_1 = []
-        l_f1_0 = []
-        l_f1_1 = []
-        l_matconf = []
+def printResults(dic_logs):
+    l_acc = []
+    l_logloss = []
+    l_matconf = []
 
 
 
-        for fold_idx in dic_logs[clf_name]['fold']:
+    for fold_idx in dic_logs['fold']:
 
 
-            ypredproba = dic_logs[clf_name]['ypredproba'][fold_idx]
-            ypredproba = reshapePrediction(ypredproba)
+        ypredproba = dic_logs['ypredproba'][fold_idx]
+        ypredproba = reshapePrediction(ypredproba)
 
-            ypred = np.round(ypredproba).astype(int)
-            yval = dic_logs[clf_name]['yval'][fold_idx]
+        yval = dic_logs['yval'][fold_idx]
 
-
-            #metrics
-            roc = metrics.roc_auc_score(yval, ypredproba)
-            acc = metrics.accuracy_score(yval, ypred)
-            precision_0, recall_0, f1_0, _ = metrics.precision_recall_fscore_support(yval, ypred, average='binary', pos_label=0)
-            precision_1, recall_1, f1_1, _ = metrics.precision_recall_fscore_support(yval, ypred, average='binary', pos_label=1)
-            matconf = metrics.confusion_matrix(yval, ypred)
+        #metrics
+        acc = metrics.accuracy_score(yval, np.round(ypredproba).astype(int))
+        logloss = metrics.log_loss(yval, ypredproba)
+        matconf = metrics.confusion_matrix(yval, np.round(ypredproba).astype(int))
 
 
-            l_roc.append(roc)
-            l_acc.append(acc)
-            l_precision_0.append(precision_0)
-            l_precision_1.append(precision_1)
-            l_recall_0.append(recall_0)
-            l_recall_1.append(recall_1)
-            l_f1_0.append(f1_0)
-            l_f1_1.append(f1_1)
-            l_matconf.append(matconf)
+        l_acc.append(acc)
+        l_logloss.append(logloss)
+        l_matconf.append(matconf)
 
-        string = ("acc|roc = %.3f|%.3f, C0: pres|rec|f1 = %.3f|%.3f|%.3f, C1: pres|rec|f1 = %.3f|%.3f|%.3f" %
-              (np.mean(l_acc), np.mean(l_roc),
-               np.mean(l_precision_0), np.mean(l_recall_0), np.mean(l_f1_0),
-               np.mean(l_precision_1), np.mean(l_recall_1), np.mean(l_f1_1))
-              )
-        output_string.append(string)
-
+        string = ("acc|logloss = {0:.3f}|{1:.3f}".format(np.mean(l_acc), np.mean(l_logloss)))
+        return string
+def KerasClassWeight(Y_vec):
+    # Find the weight of each class as present in y.
+    # inversely proportional to the number of samples in the class
+    recip_freq = 1. / np.bincount(Y_vec)
+    weight = recip_freq / np.mean(recip_freq)
+    dic_w = {index:weight_value for index, weight_value in enumerate(weight)}
+    return dic_w
 
 # Params
 #General params
-n_folds = 1
+n_folds = 10
 test_size = 0.20
-nthread = 6
+nthread = 8
 seed = 123
 
-filename = 'pd_data_[LEcat].p'
-filename = 'pd_data_[DummyCat-thresh300].p'
+# filename = 'pd_data_[LEcat].p'
+# filename = 'pd_data_[DummyCat-thresh300]_fillNANcont_var.p'
+filename = 'pd_data_[LEcat]_fillNANcont_var.p'
 
+X, Y, X_test, test_idx, pd_data = LoadParseData('pd_data_[DummyCat-thresh300]_fillNANcont_var.p')
+# X1, Y1, X_test1, test_idx1, pd_data1 = LoadParseData('pd_data_[DummyCat-thresh300]_fillNANcont_var.p')
 
-X, Y, X_test, test_idx = LoadParseData(filename)
 DATA = (X, Y)
+# DATA1 = (X1, Y1)
 
 
 TODO = 'SKL'
 # TODO = 'NN'
-STORE = False
+STORE = True
 skf = cross_validation.StratifiedShuffleSplit(Y, n_iter=n_folds, test_size=test_size, random_state=seed)
 
 
-# clf = svm.LinearSVC(class_weight=None,random_state=seed)
-# clf = naive_bayes.MultinomialNB(alpha=.1)
-# clf = linear_model.LogisticRegression(C=5.)
-# scores = cross_validation.cross_val_score(clf, X, Y, scoring='accuracy', cv=skf, n_jobs=nthread, verbose=1)
+# # clf = linear_model.SGDClassifier(verbose=1, loss='log', n_iter=400, class_weight='balanced', penalty='l2', n_jobs=nthread, random_state=seed)
+# clf = ensemble.RandomForestClassifier(n_estimators=400, max_depth=None, class_weight='balanced', random_state=seed, n_jobs=nthread, verbose=1)
+# # clf = linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)
+# scores = cross_validation.cross_val_score(clf, X, Y, scoring='log_loss', cv=skf, n_jobs=nthread, verbose=1)
 # print(scores)
 # print(np.mean(scores))
 
 
 
-# from sklearn.ensemble import ExtraTreesClassifier
-# from sklearn.feature_selection import SelectFromModel
-# model = SelectFromModel(ExtraTreesClassifier(max_depth=50, n_estimators=500, verbose=1, n_jobs=nthread),
-#                         prefit=False, threshold='median')
-# model.fit(X, Y)
-#
-# X = model.transform(X)
-# print(X.shape)
-
-
 if TODO == 'NN':
-    clfs = NNmodels(X.todense(), Y)
-    print(X.shape)
+    clfs = NNmodels()
 if TODO == 'SKL':
-    DATA = (X, Y)
-    print(X.shape)
     clfs = SKLEARNmodels()
 
 ##################################################################################
 # CV
 ##################################################################################
-dic_logs = {}
-
 for clf_indice, data_clf in enumerate(clfs):
 
     print('-' * 50)
     print("Classifier [%i]" % clf_indice)
     startime = time.time()
-    X = data_clf[0][0]
+    X = data_clf[0][0]; print(X.shape)
     Y = data_clf[0][1]
 
     clf = data_clf[1]
     clf_name = clf.__class__.__name__
     print(clf)
 
-    dic_logs[clf_name] = {
+    dic_logs = {
+        'name': clf_name,
+        'params': clf.get_params(),
         'fold': [],
         'ypredproba': [],
         'yval': [],
@@ -457,6 +406,8 @@ for clf_indice, data_clf in enumerate(clfs):
         'best_val_metric': [],
         'eval_func': [],
     }
+
+    filename = "{0}_{1}".format(clf_indice, clf_name)
 
 
     for fold_indice, (tr_idx, te_idx) in enumerate(skf):
@@ -475,7 +426,8 @@ for clf_indice, data_clf in enumerate(clfs):
 
         except:
             try: #NN
-                logs = clf.fit(xtrain, ytrain, eval_set=(xval, yval), show_accuracy=True)
+                logs = clf.fit(xtrain, ytrain, eval_set=(xval, yval), class_weight=KerasClassWeight(ytrain))
+                # logs = clf.fit(xtrain, ytrain, eval_set=(xval, yval))
 
                 dic_logs[clf_name]['best_epoch'].append(np.argmin(logs.history['val_loss']))
                 dic_logs[clf_name]['best_val_metric'].append(np.min(logs.history['val_loss']))
@@ -492,52 +444,45 @@ for clf_indice, data_clf in enumerate(clfs):
         error = eval_func(yval, ypredproba)
         print(error)
 
-        dic_logs[clf_name]['fold'].append(fold_indice)
-        dic_logs[clf_name]['ypredproba'].append(ypredproba)
-        dic_logs[clf_name]['yval'].append(yval)
-        dic_logs[clf_name]['eval_func'].append(error)
+        dic_logs['fold'].append(fold_indice)
+        dic_logs['ypredproba'].append(ypredproba)
+        dic_logs['yval'].append(yval)
+        dic_logs['eval_func'].append(error)
 
     print(metrics.confusion_matrix(yval, ypredproba.round()))
-    # print(printResults(dic_logs, l_clf_names=[clf_name]))
+    print(printResults(dic_logs))
 
+    filename+='_'+printResults(dic_logs)
 
-def saveDicLogs(dic_logs, filename):
+    def saveDicLogs(dic_logs, filename):
 
-    folder2save = CODE_FOLDER + 'data/4_diclogs/'
-    if os.path.exists(folder2save + filename):
-        print('file exist !')
-        raise BrokenPipeError
-    else:
-        proof_code = open(CODE_FOLDER + 'code/main_CV.py', 'rb').read()
-        open(folder2save + filename + '.py', 'wb').write(proof_code)
-        pickle.dump(dic_logs, open(folder2save + filename, 'wb'))
-    return
-if STORE: saveDicLogs(dic_logs, filename)
-
-
-
-ypredproba = clf.predict_proba(X_test)
-ypredproba = reshapePrediction(ypredproba)
-
-pd_prediction = pd.DataFrame({'ID':test_idx, 'PredictedProb':ypredproba})
-pd_prediction.to_csv('test.csv', index=None)
+        folder2save = CODE_FOLDER + 'diclogs/'
+        if os.path.exists(folder2save + filename):
+            print('file exist !')
+            raise BrokenPipeError
+        else:
+            proof_code = open(CODE_FOLDER + 'code/main_CV.py', 'rb').read()
+            open(folder2save + filename + '.py', 'wb').write(proof_code)
+            pickle.dump(dic_logs, open(folder2save + filename, 'wb'))
+        return
+    if STORE: saveDicLogs(dic_logs, filename)
 
 
 
 
+#
+# ypredproba = clf.predict_proba(X_test)
+# ypredproba = reshapePrediction(ypredproba)
+#
+# pd_prediction = pd.DataFrame({'ID':test_idx, 'PredictedProb':ypredproba})
+# pd_prediction.to_csv('test.csv', index=None)
+#
+
+# from sklearn.feature_selection import SelectFromModel
+# select = SelectFromModel(ensemble.RandomForestClassifier(n_estimators=100, verbose=2, n_jobs=nthread), threshold='median', prefit=False)
+# select.fit(X,Y)
+# new_X = select.transform(X)
 
 
-
-##################################################################################
-# debug
-##################################################################################
-# fold = 0
-# ypredproba = dic_logs['RandomForestClassifier']['ypredproba'][fold]
-# yval = dic_logs['RandomForestClassifier']['yval'][fold]
-# ypred = ypredproba.argmax(1)
-# print(np.bincount(ypred))
-# print(metrics.confusion_matrix(yval, ypred))
-# print(metrics.precision_recall_fscore_support(yval, ypred, average='binary', pos_label=0))
-
-
-
+# from sklearn.preprocessing import StandardScaler
+# X = StandardScaler().fit_transform(X)

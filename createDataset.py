@@ -123,11 +123,15 @@ def FillStrategy(pd_train, pd_test):
 pdtrain = loadFileinZipFile(CODE_FOLDER + "data/train.csv.zip", "train.csv")
 pdtest = loadFileinZipFile(CODE_FOLDER + "data/test.csv.zip", "test.csv")
 pdtest['target'] = -1
+pd_data = pdtrain.append(pdtest)
+pd_data['nb_nan'] = pd_data.isnull().sum(1)
+
 
 cat_var = pdtrain.select_dtypes(["object"]).columns
 cont_var = pdtrain.select_dtypes(["float", "int"]).columns
 
-# Label Encoding categorical variables
+
+# LE cat var
 pd_data = pdtrain.append(pdtest)
 for col in pd_data[cat_var]:
     print(col)
@@ -136,7 +140,20 @@ pd_data.to_hdf(CODE_FOLDER + 'data/pd_data_[LEcat].p', 'wb')
 
 
 
-# One Hot Cat var
+# LE cat var
+pd_data = pdtrain.append(pdtest)
+for col in pd_data[cat_var]:
+    print(col)
+    pd_data[col] = pd.factorize(pd_data[col])[0]
+for col in pd_data[cont_var]:
+    pd_data.loc[pd_data[col].isnull(), col] = pd_data[col].mean()
+
+pd_data.to_hdf(CODE_FOLDER + 'data/pd_data_[LEcat]_fillNANcont_var.p', 'wb')
+
+
+
+
+# OH cat and LE rest
 maxCategories = 300
 pd_data = pdtrain.append(pdtest)
 cols2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) <= maxCategories]
@@ -144,102 +161,46 @@ colsNot2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) >
 for col in pd_data[colsNot2dummy]: pd_data[col] = pd.factorize(pd_data[col])[0]
 pd_data = pd.get_dummies(pd_data, dummy_na=True, columns=cols2dummy)
 
-
-
 pd_data.to_hdf(CODE_FOLDER + 'data/pd_data_[DummyCat-thresh300].p', 'wb')
 
 
-#
-#
-#
-#
-# print("Just Filling...")
-# pdtrain = loadFileinZipFile("data/train.csv.zip", "train.csv" )
-# pdtest = loadFileinZipFile("data/test.csv.zip", "test.csv" )
-# # pdtest['target'] = -1
-# pddata = pd.concat([pdtrain, pdtest])
-#
-# replace_na_cat = False
-# mean_na_cont = False
-# median_na_disc = False
-# pdtrain , pdtest = FillStrategy(pdtrain, pdtest)
-# params = '_[Cat%i]_[Cont%i]_[Disc%i]' % (replace_na_cat, mean_na_cont, median_na_disc)
-# pdtrain.to_hdf('data/train' + params, 'wb')
-# pdtest.to_hdf('data/test' + params, 'wb')
-#
-#
-# print("LabelEncode Categorical and fill other variable")
-# pdtrain, pdtest = load_datasets(script_folder)
-# replace_na_cat = False
-# mean_na_cont = True
-# median_na_disc = True
-# pd_train , pd_test = FillStrategy(pd_train, pd_test)
-#
-# le = LabelEncoder() #LabelEncoding Categorical var
-# for col in pd_train[cat_var]:
-#     vec = pd_train[col].append(pd_test[col]).values
-#     y = le.fit_transform(vec)
-#     pd_train[col] = y[:len(pd_train)]
-#     pd_test[col] = y[len(pd_train):]
-#
-# params = '_[Cat%i]_[Cont%i]_[Disc%i]_LE' % (replace_na_cat, mean_na_cont, median_na_disc)
-# pd_train.to_hdf(data_folder + 'train' + params, 'wb')
-# pd_test.to_hdf(data_folder + 'test' + params, 'wb')
-#
-#
-#
-# print('Dataset with fixed amount of features for OneHot')
-# pd_train, pd_test = load_datasets(script_folder)
-# replace_na_cat = False
-# mean_na_cont = True
-# median_na_disc = True
-# nb_feats = 100
-#
-# params = '_[Cat%i]_[Cont%i]_[Disc%i]_[nbFeats%i]' % (replace_na_cat, mean_na_cont, median_na_disc, nb_feats)
-#
-# pd_train , pd_test = FillStrategy(pd_train, pd_test)
-# pd_train_final = pd_train[cont_var+disc_var+dummy_var]
-# pd_test_final = pd_test[cont_var+disc_var+dummy_var]
-#
-# #Dummy columns
-# for col in pd_train[cat_var]:
-#     print(col)
-#     dcf = Dummycolumns(cols=col, prefix=col+'_', nb_features=nb_feats)
-#     dcf.fit(pd_train, pd_test)
-#     pd_train_final = pd.merge(pd_train_final, dcf.transform(pd_train), left_index=True, right_index=True)
-#     pd_test_final = pd.merge(pd_test_final, dcf.transform(pd_test), left_index=True, right_index=True)
-#
-# #Harmonizing columns between train and test dataset
-# cols2keep = list(set(pd_test_final).intersection(set(pd_train_final)))
-# pd_train_final = pd_train_final[cols2keep]
-# pd_train_final['Response'] = pd_train['Response']
-# pd_test_final = pd_test_final[cols2keep]
-#
-# #save to disk
-# pd_train_final.to_hdf(data_folder + 'train' + params, 'wb')
-# pd_test_final.to_hdf(data_folder + 'test' + params, 'wb')
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
+
+
+# One Hot Cat var and LE the rest (one column)
+maxCategories = 10
+pd_data = pdtrain.append(pdtest)
+cols2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) <= maxCategories]
+colsNot2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) > maxCategories]
+for col in pd_data[colsNot2dummy]: pd_data[col] = pd.factorize(pd_data[col])[0]
+pd_data = pd.get_dummies(pd_data, dummy_na=True, columns=cols2dummy)
+
+pd_data.to_hdf(CODE_FOLDER + 'data/pd_data_[DummyCat-thresh10].p', 'wb')
+
+
+
+
+
+# One Hot Cat var and LE the rest (one column)
+maxCategories = 5
+pd_data = pdtrain.append(pdtest)
+cols2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) <= maxCategories]
+colsNot2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) > maxCategories]
+for col in pd_data[colsNot2dummy]: pd_data[col] = pd.factorize(pd_data[col])[0]
+pd_data = pd.get_dummies(pd_data, dummy_na=True, columns=cols2dummy)
+
+pd_data.to_hdf(CODE_FOLDER + 'data/pd_data_[DummyCat-thresh5].p', 'wb')
+
+
+
+
+#fill NAN cont_var
+# OH cat and LE rest
+maxCategories = 300
+pd_data = pdtrain.append(pdtest)
+for col in pd_data[cont_var]:
+    pd_data.loc[pd_data[col].isnull(), col] = pd_data[col].mean()
+cols2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) <= maxCategories]
+colsNot2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) > maxCategories]
+for col in pd_data[colsNot2dummy]: pd_data[col] = pd.factorize(pd_data[col])[0]
+pd_data = pd.get_dummies(pd_data, dummy_na=True, columns=cols2dummy)
+pd_data.to_hdf(CODE_FOLDER + 'data/pd_data_[DummyCat-thresh300]_fillNANcont_var.p', 'wb')

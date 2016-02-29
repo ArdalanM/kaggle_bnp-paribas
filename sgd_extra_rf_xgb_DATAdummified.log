@@ -1,0 +1,284 @@
+Using Theano backend.
+Using gpu device 0: GeForce GTX 960M (CNMeM is disabled, CuDNN not available)
+--------------------------------------------------
+Classifier [0]
+(114321, 507)
+SGDClassifier(alpha=0.0001, average=False, class_weight='balanced',
+       epsilon=0.1, eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='modified_huber', n_iter=1000,
+       n_jobs=8, penalty='l2', power_t=0.5, random_state=123, shuffle=True,
+       verbose=0, warm_start=False)
+Fold [0]
+13.0138928212
+Fold [1]
+8.81457973383
+Fold [2]
+8.85072930614
+Fold [3]
+8.61984987237
+Fold [4]
+23.5011804176
+Fold [5]
+8.46999814772
+Fold [6]
+14.4201504925
+Fold [7]
+21.5405176358
+Fold [8]
+8.94118223489
+Fold [9]
+21.3684675129
+[[ 4998   462]
+ [13686  3719]]
+acc|logloss = 0.623|13.014
+--------------------------------------------------
+Classifier [1]
+(114321, 507)
+RandomForestClassifier(bootstrap=True, class_weight='balanced',
+            criterion='gini', max_depth=None, max_features='auto',
+            max_leaf_nodes=None, min_samples_leaf=1, min_samples_split=2,
+            min_weight_fraction_leaf=0.0, n_estimators=1000, n_jobs=8,
+            oob_score=False, random_state=123, verbose=0, warm_start=False)
+Fold [0]
+0.46863780123
+Fold [1]
+0.469823038795
+Fold [2]
+0.468707569887
+Fold [3]
+0.470492491813
+Fold [4]
+0.464380571687
+Fold [5]
+0.468775129813
+Fold [6]
+0.467606243797
+Fold [7]
+0.46757943947
+Fold [8]
+0.465582806329
+Fold [9]
+0.466408993961
+[[  909  4551]
+ [  463 16942]]
+acc|logloss = 0.780|0.469
+--------------------------------------------------
+Classifier [2]
+(114321, 507)
+ExtraTreesClassifier(bootstrap=False, class_weight='balanced',
+           criterion='gini', max_depth=None, max_features='auto',
+           max_leaf_nodes=None, min_samples_leaf=1, min_samples_split=2,
+           min_weight_fraction_leaf=0.0, n_estimators=1000, n_jobs=8,
+           oob_score=False, random_state=123, verbose=1, warm_start=False)
+Fold [0]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.5s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   31.2s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.8min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.9s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.467096048358
+Fold [1]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.4s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   31.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.8min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.472741983542
+Fold [2]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.3s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   31.3s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.8min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.468844562594
+Fold [3]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.4s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.7s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.7min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    1.9s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.47104223244
+Fold [4]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.6s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   31.6s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.8min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.9s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.7s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.468432416659
+Fold [5]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.6s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   31.7s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.8min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.9s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.6s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.6s finished
+0.468569503721
+Fold [6]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.6s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   32.0s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.8min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    1.9s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.5s finished
+0.466419932116
+Fold [7]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.5s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.4s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.7min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.5s finished
+0.467255135393
+Fold [8]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.3s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.6s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.1min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.7min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.5s finished
+0.464762857406
+Fold [9]
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    6.4s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:   30.6s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:  1.2min
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:  2.2min
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:  2.8min finished
+[Parallel(n_jobs=8)]: Done  34 tasks      | elapsed:    0.2s
+[Parallel(n_jobs=8)]: Done 184 tasks      | elapsed:    0.8s
+[Parallel(n_jobs=8)]: Done 434 tasks      | elapsed:    2.0s
+[Parallel(n_jobs=8)]: Done 784 tasks      | elapsed:    3.5s
+[Parallel(n_jobs=8)]: Done 1000 out of 1000 | elapsed:    4.5s finished
+0.468601641356
+[[ 1052  4408]
+ [  592 16813]]
+acc|logloss = 0.782|0.467
+--------------------------------------------------
+Classifier [3]
+(114321, 507)
+XGBClassifier(base_score=0.5, colsample_bylevel=1, colsample_bytree=1,
+       gamma=0, learning_rate=0.01, max_delta_step=0, max_depth=1000,
+       min_child_weight=1, missing=None, n_estimators=10000, nthread=8,
+       objective='binary:logistic', reg_alpha=0, reg_lambda=1,
+       scale_pos_weight=1, seed=123, silent=True, subsample=0.7)
+Fold [0]
+Will train until validation_0 error hasn't decreased in 360 rounds.
+[0]	validation_0-logloss:0.689458
+[1]	validation_0-logloss:0.685758
+[2]	validation_0-logloss:0.682194
+[3]	validation_0-logloss:0.678726
+[4]	validation_0-logloss:0.675294
+[5]	validation_0-logloss:0.671895
+[6]	validation_0-logloss:0.668528
+[7]	validation_0-logloss:0.665346
+[8]	validation_0-logloss:0.662227
+[9]	validation_0-logloss:0.659147
+[10]	validation_0-logloss:0.656075
+[11]	validation_0-logloss:0.653097
+[12]	validation_0-logloss:0.650143
+[13]	validation_0-logloss:0.647245
+[14]	validation_0-logloss:0.644412
+[15]	validation_0-logloss:0.641560
+[16]	validation_0-logloss:0.638860
+[17]	validation_0-logloss:0.636154
+[18]	validation_0-logloss:0.633505
+[19]	validation_0-logloss:0.630883
+[20]	validation_0-logloss:0.628324
+[21]	validation_0-logloss:0.625767
+[22]	validation_0-logloss:0.623306
+[23]	validation_0-logloss:0.620888
+[24]	validation_0-logloss:0.618495
+[25]	validation_0-logloss:0.616254
+[26]	validation_0-logloss:0.613962
+[27]	validation_0-logloss:0.611645
+[28]	validation_0-logloss:0.609404
+[29]	validation_0-logloss:0.607235
+[30]	validation_0-logloss:0.605049
+[31]	validation_0-logloss:0.602912
+[32]	validation_0-logloss:0.600809
+[33]	validation_0-logloss:0.598752
+[34]	validation_0-logloss:0.596765
+[35]	validation_0-logloss:0.594720
+[36]	validation_0-logloss:0.592732
+[37]	validation_0-logloss:0.590892
+[38]	validation_0-logloss:0.588997
+[39]	validation_0-logloss:0.587146
+[40]	validation_0-logloss:0.585299
+[41]	validation_0-logloss:0.583475
+[42]	validation_0-logloss:0.581645
+[43]	validation_0-logloss:0.579921
+[44]	validation_0-logloss:0.578220
+[45]	validation_0-logloss:0.576488
+[46]	validation_0-logloss:0.574781
+[47]	validation_0-logloss:0.573131
+[48]	validation_0-logloss:0.571515
+[49]	validation_0-logloss:0.569920
+[50]	validation_0-logloss:0.568351
+[51]	validation_0-logloss:0.566814
+[52]	validation_0-logloss:0.565300
+[53]	validation_0-logloss:0.563802
+[54]	validation_0-logloss:0.562356
+[55]	validation_0-logloss:0.560941
+[56]	validation_0-logloss:0.559501
+[57]	validation_0-logloss:0.558126
+[58]	validation_0-logloss:0.556752
+[59]	validation_0-logloss:0.555390
+[60]	validation_0-logloss:0.554048
+[61]	validation_0-logloss:0.552681
+[62]	validation_0-logloss:0.551388
+[63]	validation_0-logloss:0.550074
+[64]	validation_0-logloss:0.548798
+[65]	validation_0-logloss:0.547517
+[66]	validation_0-logloss:0.546312
+[67]	validation_0-logloss:0.545126
+[68]	validation_0-logloss:0.543913
+[69]	validation_0-logloss:0.542752
+[70]	validation_0-logloss:0.541572
+[71]	validation_0-logloss:0.540475
+[72]	validation_0-logloss:0.539351
+[73]	validation_0-logloss:0.538258
+[74]	validation_0-logloss:0.537151
+[75]	validation_0-logloss:0.536042
+[76]	validation_0-logloss:0.534928
+[77]	validation_0-logloss:0.533895
+[78]	validation_0-logloss:0.532879
