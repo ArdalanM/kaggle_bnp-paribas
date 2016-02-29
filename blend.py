@@ -18,15 +18,6 @@ from sklearn import ensemble
 from sklearn import naive_bayes
 from sklearn import svm
 
-from keras.preprocessing import text, sequence
-from keras.optimizers import *
-from keras.models import Sequential
-from keras.utils import np_utils
-
-from keras.layers import core, embeddings, recurrent, advanced_activations, normalization
-from keras.utils import np_utils
-from keras.callbacks import EarlyStopping
-
 def reshapePrediction(ypredproba):
     result = None
     if len(ypredproba.shape) > 1:
@@ -49,27 +40,6 @@ def loadFileinZipFile(zip_filename, filename, dtypes=None, parsedate = None, pas
             return pd.read_csv(myzip.open(filename), sep=',', parse_dates=parsedate, dtype=dtypes, **kvargs)
         else:
             return pd.read_csv(myzip.open(filename), sep=',', dtype=dtypes, **kvargs)
-def CreateDataFrameFeatureImportance(model, pd_data):
-    dic_fi = model.get_fscore()
-    df = pd.DataFrame(dic_fi.items(), columns=['feature', 'fscore'])
-    df['col_indice'] = df['feature'].apply(lambda r: r.replace('f','')).astype(int)
-    df['feat_name'] = df['col_indice'].apply(lambda r: pd_data.columns[r])
-    return df.sort('fscore', ascending=False)
-def LoadParseData(filename):
-
-
-    pd_data = pd.read_hdf(CODE_FOLDER + "data/" + filename)
-
-    pd_train = pd_data[pd_data.target >= 0]
-    pd_test = pd_data[pd_data.target == -1]
-
-    Y = pd_train['target'].values.astype(int)
-    test_idx = pd_test['ID'].values.astype(int)
-
-    X = np.array(pd_train.drop(['ID', 'target'],1))
-    X_test = np.array(pd_test.drop(['ID','target'], 1))
-
-    return X, Y, X_test, test_idx, pd_data
 def xgb_accuracy(ypred, dtrain):
         ytrue = dtrain.get_label().astype(int)
         ypred = np.round(ypred).astype(int)
@@ -279,7 +249,7 @@ def SKLEARNmodels():
     params = {'n_jobs':nthread,'random_state':seed,'class_weight':'balanced'}
 
     sgd = linear_model.SGDClassifier(loss='log', n_iter=100, class_weight='balanced', penalty='l2', n_jobs=nthread, random_state=seed)
-    extra = ensemble.ExtraTreesClassifier(criterion='gini',max_depth=10,n_estimators=100,**params)
+    extra = ensemble.ExtraTreesClassifier(criterion='gini',max_depth=10,n_estimators=50,**params)
     extra1 = ensemble.ExtraTreesClassifier(criterion='entropy',n_estimators=1000,**params)
 
 
@@ -290,9 +260,9 @@ def SKLEARNmodels():
         # [DATA, sgd],
         # [DATA, rf],
         # [DATA, rf1],
-        [DATA, extra],
+        # [DATA, extra],
         # [DATA, extra1],
-        # [DATA, xgb],
+        [DATA, xgb],
     ]
     return clfs
 def printResults(dic_logs):
@@ -331,9 +301,51 @@ CV = 'strat'
 STORE = True
 DOTEST = True
 n_folds = 3
-test_size = 0.20
+test_size = 0.10
 nthread = 8
 seed = 123
+
+
+folder = CODE_FOLDER + 'diclogs/'
+import glob
+l_filenames = glob.glob1(folder, '*.p')
+
+
+l_X = []
+l_Y = []
+
+n_folds = 3
+n_models = 2
+for filename in l_filenames:
+    dic_log = pickle.load(open(folder + filename,'rb'))
+    l_ypredproba = dic_log['ypredproba']
+    l_X.append(l_ypredproba)
+
+
+
+for a in zip(*l_X):
+    print(len(a))
+
+
+
+
+
+
+
+skf = cross_validation.StratifiedShuffleSplit(Y, n_iter=n_folds, test_size=test_size, random_state=seed)
+
+for fold_indice, (tr_idx, te_idx) in enumerate(skf):
+
+
+    for name in l_names:
+        dic_log = pickle.load(open(folder + names,'rb'))
+
+
+
+
+
+
+
 
 
 X, Y, X_test, test_idx, pd_data = LoadParseData('pd_data_[DummyCat-thresh300]_fillNANcont_var.p')
@@ -423,11 +435,17 @@ for clf_indice, data_clf in enumerate(clfs):
 
     if DOTEST:
         print('Test prediction...')
-        if clf_name == '':
+        try: #xgb
             clf.n_estimators = np.mean(dic_logs['best_epoch']).astype(int)
-            clf.fit(X, Y)
-        else:
-            clf.fit(X, Y)
+            clf.fit(X, Y, )
+        except:
+            try: #NN
+                logs = clf.fit(X, Y)
+            except:
+                try:
+                    clf.fit(X, Y)
+                except:
+                    print('no fit')
 
         ypredproba = clf.predict_proba(X_test)
         ypredproba = reshapePrediction(ypredproba)
