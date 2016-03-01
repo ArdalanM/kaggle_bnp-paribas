@@ -166,33 +166,6 @@ pd_data.to_hdf(CODE_FOLDER + 'data/pd_data_[DummyCat-thresh300].p', 'wb')
 
 
 
-# One Hot Cat var and LE the rest (one column)
-maxCategories = 10
-pd_data = pdtrain.append(pdtest)
-cols2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) <= maxCategories]
-colsNot2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) > maxCategories]
-for col in pd_data[colsNot2dummy]: pd_data[col] = pd.factorize(pd_data[col])[0]
-pd_data = pd.get_dummies(pd_data, dummy_na=True, columns=cols2dummy)
-
-pd_data.to_hdf(CODE_FOLDER + 'data/pd_data_[DummyCat-thresh10].p', 'wb')
-
-
-
-
-
-# One Hot Cat var and LE the rest (one column)
-maxCategories = 5
-pd_data = pdtrain.append(pdtest)
-cols2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) <= maxCategories]
-colsNot2dummy = [col for col in pd_data[cat_var] if len(pd_data[col].unique()) > maxCategories]
-for col in pd_data[colsNot2dummy]: pd_data[col] = pd.factorize(pd_data[col])[0]
-pd_data = pd.get_dummies(pd_data, dummy_na=True, columns=cols2dummy)
-
-pd_data.to_hdf(CODE_FOLDER + 'data/pd_data_[DummyCat-thresh5].p', 'wb')
-
-
-
-
 #fill NAN cont_var
 # OH cat and LE rest
 maxCategories = 300

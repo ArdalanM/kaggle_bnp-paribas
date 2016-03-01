@@ -278,21 +278,23 @@ def NNmodels():
 def SKLEARNmodels():
     params = {'n_jobs':nthread,'random_state':seed,'class_weight':'balanced'}
 
-    sgd = linear_model.SGDClassifier(loss='log', n_iter=100, class_weight='balanced', penalty='l2', n_jobs=nthread, random_state=seed)
-    extra = ensemble.ExtraTreesClassifier(criterion='gini',max_depth=10,n_estimators=100,**params)
-    extra1 = ensemble.ExtraTreesClassifier(criterion='entropy',n_estimators=1000,**params)
+    # sgd = linear_model.SGDClassifier(loss='log', n_iter=100, class_weight='balanced', penalty='l2', n_jobs=nthread, random_state=seed)
 
+    extra = ensemble.ExtraTreesClassifier(criterion='gini',max_depth=None,n_estimators=1000,**params)
+    extra1 = ensemble.ExtraTreesClassifier(criterion='entropy',max_depth=None,n_estimators=1000,**params)
 
-    xgb = XGBClassifier(max_depth=5, learning_rate=0.1, n_estimators=10,nthread=nthread,
-                        subsample=0.5, seed=seed)
+    rf = ensemble.RandomForestClassifier(criterion="gini", n_estimators=1000,max_features='auto', max_depth=None, **params)
+    rf1 = ensemble.RandomForestClassifier(criterion="entropy", n_estimators=1000,max_features='auto', max_depth=None, **params)
+
+    xgb = XGBClassifier(max_depth=10, learning_rate=0.03, n_estimators=10000,nthread=nthread, subsample=0.8, seed=seed)
 
     clfs = [
         # [DATA, sgd],
-        # [DATA, rf],
-        # [DATA, rf1],
+        [DATA, rf],
+        [DATA, rf1],
         [DATA, extra],
-        # [DATA, extra1],
-        # [DATA, xgb],
+        [DATA, extra1],
+        [DATA, xgb],
     ]
     return clfs
 def printResults(dic_logs):
@@ -322,17 +324,13 @@ def saveDicLogs(dic_logs, filename):
 
 # Params
 #General params
-# filename = 'pd_data_[LEcat].p'
-# filename = 'pd_data_[DummyCat-thresh300]_fillNANcont_var.p'
-filename = 'pd_data_[LEcat]_fillNANcont_var.p'
-
 TODO = 'SKL'
 CV = 'strat'
 STORE = True
 DOTEST = True
-n_folds = 3
+n_folds = 10
 test_size = 0.20
-nthread = 8
+nthread = 12
 seed = 123
 
 
