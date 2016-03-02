@@ -290,10 +290,10 @@ def SKLEARNmodels():
 
     clfs = [
         # [DATA, sgd],
-        [DATA, rf],
-        [DATA, rf1],
-        [DATA, extra],
-        [DATA, extra1],
+        # [DATA, rf],
+        # [DATA, rf1],
+        # [DATA, extra],
+        # [DATA, extra1],
         [DATA, xgb],
     ]
     return clfs

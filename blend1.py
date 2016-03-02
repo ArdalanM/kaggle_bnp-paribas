@@ -68,24 +68,34 @@ def saveDicLogs(dic_logs, filename):
 
 folder = CODE_FOLDER + 'diclogs/'
 import glob
-l_filenames = glob.glob1(folder, '*.p') ; print(l_filenames)
+l_filenames = glob.glob1(folder, '*[0-9].p') ; print(l_filenames)
 
-pd_blend = pd.DataFrame()
+
+l_X = []
+l_X_test=[]
+l_Y = []
 for filename in l_filenames:
-    dic_log = pickle.load(open(folder + filename,'rb'))
     filename = filename[:-2]
+    print(filename)
 
-    folds = dic_log['fold']
+    dic_log = pickle.load(open(folder + filename + '.p','rb'))
 
-    for fold in dic_log['fold']:
-        pd_blend[filename+'_pred'+str(fold)] = dic_log['ypredproba'][fold]
-        pd_blend[filename+'_val'+str(fold)] = dic_log['yval'][fold]
+    pd_temp = pd.read_csv(folder + filename + '.csv')
+    test_idx = pd_temp['ID'].values.astype(int)
+
+    l_X.append(np.hstack(dic_log['ypredproba']))
+    l_X_test.append(pd_temp['PredictedProb'].values)
+    l_Y.append(np.hstack(dic_log['yval']))
+
+X = np.array(l_X).T
+X_test = np.array(l_X_test).T
+Y = np.array(l_Y).T.mean(1).astype(int)
 
 
-#params
-n_folds = len(folds)
-test_size = .1
-n_models = len(l_filenames)
+
+#params10len(folds)
+n_folds = 10
+test_size = .2
 nthread = 8
 seed = 123
 
@@ -94,30 +104,25 @@ seed = 123
 
 
 # clf = linear_model.SGDClassifier(loss='log', penalty='l2')
-clf = linear_model.LogisticRegression(C=10, penalty='l2')
-# clf = linear_model.LinearRegression()
+# clf = linear_model.LogisticRegression(C=.1, penalty='l2')
+# clf = linear_model.LinearRegression(normalize=True)
+# clf = linear_model.LassoCV(eps=.05, n_alphas=200)
+clf = ensemble.RandomForestRegressor(n_estimators=50, max_features=1., max_depth=5, n_jobs=nthread)
+# clf = ensemble.RandomForestClassifier(n_estimators=100, max_depth=4, n_jobs=nthread)
 
-
-skf = cross_validation.ShuffleSplit(len(pd_blend), n_iter=n_folds, test_size=test_size, random_state=seed)
+skf = cross_validation.StratifiedShuffleSplit(Y, n_iter=n_folds, test_size=test_size, random_state=seed)
 
 for fold_indice, (tr_idx, te_idx) in enumerate(skf):
 
-    X_cols = [col for col in pd_blend if 'pred{}'.format(fold_indice) in col]
-    Y_cols = [col for col in pd_blend if 'val{}'.format(fold_indice) in col]
-
-    X = np.array(pd_blend[X_cols]).astype(float)
-    Y = np.array(pd_blend[Y_cols]).mean(1).astype(int)
-
     xtrain = X[tr_idx]
-    xval = X[te_idx]
-
     ytrain = Y[tr_idx]
+    xval = X[te_idx]
     yval = Y[te_idx]
 
     clf.fit(xtrain, ytrain)
 
-    valpred = reshapePrediction(clf.predict_proba(xval))
-    trainpred = reshapePrediction(clf.predict_proba(xtrain))
+    valpred = reshapePrediction(clf.predict(xval))
+    trainpred = reshapePrediction(clf.predict(xtrain))
 
 
     train_err = eval_func(ytrain, trainpred)
@@ -125,40 +130,10 @@ for fold_indice, (tr_idx, te_idx) in enumerate(skf):
 
     print(train_err, val_err)
 
+clf.fit(X,Y)
+testpred = clf.predict(X_test)
 
-
-
-
-#
-# l_filenames = glob.glob1(folder, '*.csv') ; print(l_filenames)
-#
-# pd_blend = pd.DataFrame()
-# for filename in l_filenames:
-#     pd_temp = pd.read_csv(folder + filename)
-#     pd_blend[filename] = pd_temp['PredictedProb']
-#     test_idx = pd_temp['ID']
-#
-# X_test = np.array(pd_blend).astype(float)
-# testpred = clf.predict_proba(X_test)
-# testpred = reshapePrediction(testpred)
-#
-# pd_submission = pd.DataFrame({'ID':test_idx, 'PredictedProb':testpred})
-# pd_submission.to_csv(CODE_FOLDER + 'diclogs/' + 'test' + '.csv', index=False)
-
-
-
-
-    l_filenames = glob.glob1(folder, '*.csv') ; print(l_filenames)
-
-    pd_blend = pd.DataFrame()
-    for filename in l_filenames:
-        pd_temp = pd.read_csv(folder + filename)
-        pd_blend[filename] = pd_temp['PredictedProb']
-        test_idx = pd_temp['ID']
-
-    testpred = pd_blend.mean(1).values
-
-    pd_submission = pd.DataFrame({'ID':test_idx, 'PredictedProb':testpred})
-    pd_submission.to_csv(CODE_FOLDER + 'diclogs/' + 'test' + '.csv', index=False)
+pd_submission = pd.DataFrame({'ID':test_idx, 'PredictedProb':testpred})
+pd_submission.to_csv(CODE_FOLDER + 'diclogs/' + 'test' + '.csv', index=False)
 
 

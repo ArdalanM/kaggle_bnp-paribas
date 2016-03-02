@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "main_CV.py", line 77, in <module>
+    class NN():
+  File "main_CV.py", line 84, in NN
+    optimizer=RMSprop(lr=0.001, tho=0.9),
+NameError: name 'RMSprop' is not defined
