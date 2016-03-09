@@ -186,61 +186,60 @@ def models():
     params = {'n_jobs':nthread,'random_state':seed,'class_weight':None}
 
     # lr = linear_model.LogisticRegression(penalty='l1', C=1., **params)
-    extra = ensemble.ExtraTreesClassifier(n_estimators=700,max_features= 50,criterion= 'entropy',min_samples_split= 5, max_depth= 50, min_samples_leaf= 5, **params)
-    extra1 = ensemble.ExtraTreesClassifier(n_estimators=700,max_features= 50,criterion= 'gini',min_samples_split= 5, max_depth= 50, min_samples_leaf= 5, **params)
+    extra = ensemble.ExtraTreesClassifier(n_estimators=1000,max_features= 50,criterion= 'entropy',min_samples_split= 5, max_depth= None, min_samples_leaf= 5, **params)
+    extra1 = ensemble.ExtraTreesClassifier(n_estimators=1000,max_features= 50,criterion= 'gini',min_samples_split= 5, max_depth= None, min_samples_leaf= 5, **params)
 
-    rf = ensemble.RandomForestClassifier(n_estimators=700,max_features= 50,criterion= 'entropy',min_samples_split= 5, max_depth= 50, min_samples_leaf= 5, **params)
-    rf1 = ensemble.RandomForestClassifier(n_estimators=700,max_features= 50,criterion= 'gini',min_samples_split= 5, max_depth= 50, min_samples_leaf= 5, **params)
+    rf = ensemble.RandomForestClassifier(n_estimators=1000,max_features= 50,criterion= 'entropy',min_samples_split= 5, max_depth= None, min_samples_leaf= 5, **params)
+    rf1 = ensemble.RandomForestClassifier(n_estimators=1000,max_features= 50,criterion= 'gini',min_samples_split= 5, max_depth= None, min_samples_leaf= 5, **params)
 
-    xgb = XGBClassifier(max_depth=11, learning_rate=0.01, n_estimators=1500,nthread=nthread, subsample=0.96, colsample_bytree=0.45, min_child_weight=1)
-    xgb1 = XGBClassifier(max_depth=5, learning_rate=0.01, n_estimators=1500,nthread=nthread, subsample=0.96, colsample_bytree=0.45, min_child_weight=1)
+    xgb = XGBClassifier(max_depth=20, learning_rate=0.02, n_estimators=5000,nthread=nthread, subsample=0.96, colsample_bytree=0.45, min_child_weight=1)
+    xgb1 = XGBClassifier(max_depth=40, learning_rate=0.02, n_estimators=5000,nthread=nthread, subsample=0.96, colsample_bytree=0.45, min_child_weight=1)
 
     #NN params
-    nb_epoch = 3
-    batch_size = 128
+    nb_epoch = 50
+    batch_size = 512
     esr = 402
 
     param1 = {
-        'hidden_units': (2048, 2048),
+        'hidden_units': (1024, 1024),
         'activation': (advanced_activations.PReLU(),advanced_activations.PReLU(),core.activations.sigmoid),
-        'dropout': (0., 0.), 'optimizer': Adam(lr=0.0001), 'nb_epoch': nb_epoch,
+        'dropout': (0., 0.), 'optimizer': RMSprop(), 'nb_epoch': nb_epoch,
     }
     clfs = [
-        [DATA3, NN(input_dim=DATA3[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param1)],
-        # [DATA1, rf],
-        # [DATA2, rf],
-        # [DATA3, rf],
+        # [DATA3, NN(input_dim=DATA3[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param1)],
+        [DATA1, rf],
+        [DATA2, rf],
+        [DATA3, rf],
         # [DATA4, rf],
         # [DATA5, rf],
-        # [DATA1, rf1],
-        # [DATA2, rf1],
-        # [DATA3, rf1],
+        [DATA1, rf1],
+        [DATA2, rf1],
+        [DATA3, rf1],
         # [DATA4, rf1],
         # [DATA5, rf1],
-        #
-        # [DATA1, extra],
-        # [DATA2, extra],
-        # [DATA3, extra],
+
+        [DATA1, extra],
+        [DATA2, extra],
+        [DATA3, extra],
         # [DATA4, extra],
         # [DATA5, extra],
-        # [DATA1, extra1],
-        # [DATA2, extra1],
-        # [DATA3, extra1],
+        [DATA1, extra1],
+        [DATA2, extra1],
+        [DATA3, extra1],
         # [DATA4, extra1],
         # [DATA5, extra1],
-        #
-        # [DATA3, xgb],
+
+        [DATA1, xgb],
+        [DATA2, xgb],
+        [DATA3, xgb],
         # [DATA4, xgb],
         # [DATA5, xgb],
-        # [DATA7, xgb],
-        #
-        # [DATA1, xgb],
-        # [DATA2, xgb],
-        # [DATA3, xgb],
-        # [DATA4, xgb],
-        # [DATA5, xgb],
-        # [DATA6, xgb],
-        # [DATA7, xgb],
+        [DATA1, xgb1],
+        [DATA2, xgb1],
+        [DATA3, xgb1],
+        # [DATA4, extra1],
+        # [DATA5, extra1],
+
     ]
     return clfs
 def printResults(dic_logs):
@@ -280,16 +279,16 @@ seed = 123
 X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D1_[LEcat]_[NA-contvar-mean].p')
 # # X = np.log(2 + X) ; X = np.log(2 + X)
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-# DATA1 = (X, Y, X_test,test_idx, data_name)
+DATA1 = (X, Y, X_test,test_idx, data_name)
 
-# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D2_[OH-thresh300]_[NA-contvar-mean].p')
+X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D2_[OH-thresh300]_[NA-contvar-mean].p')
 # X = np.log(2 + X) ; X = np.log(2 + X)
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-# DATA2 = (X, Y, X_test,test_idx, data_name)
+DATA2 = (X, Y, X_test,test_idx, data_name)
 #
-# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D3_[OH-thresh10]_[NA-contvar-mean].p')
+X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D3_[OH-thresh10]_[NA-contvar-mean].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-# DATA3 = (X, Y, X_test,test_idx, data_name)
+DATA3 = (X, Y, X_test,test_idx, data_name)
 #
 # X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D4_[OH-thresh10]_[NA-contvar-999].p')
 # DATA4 = (X, Y, X_test,test_idx, data_name)
@@ -304,36 +303,41 @@ X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D1_[LEcat]_[NA-contv
 # DATA7 = (X, Y, X_test,test_idx, data_name)
 
 
-clf = linear_model.LogisticRegressionCV(cv=2, scoring='log_loss', random_state=seed)
+# clf = linear_model.LogisticRegressionCV(cv=2, scoring='log_loss', random_state=seed, n_jobs=nthread)
+# for col in range(X.shape[1]):
+#     out = clf.fit(X[:,col:col+1],Y)
+#     print(pd_data.columns[col+2], clf.scores_[1].mean())
+
+# from mlxtend.feature_selection import SequentialFeatureSelector as SFS
+# # Sequential Floating Forward Selection
+# # clf = linear_model.LogisticRegression(penalty='l2', tol=1e-3, C=1., random_state=seed)
+# clf = linear_model.SGDClassifier(loss="modified_huber", class_weight='balanced', random_state=seed)
+# # clf = ensemble.RandomForestClassifier(n_estimators=200, max_features=1., max_depth=5, n_jobs=nthread)
+# sffs = SFS(clf,
+#            k_features=20,
+#            forward=True,
+#            floating=True,
+#            scoring='log_loss',
+#            print_progress=True,
+#            cv=2,
+#            n_jobs=1)
+# sffs = sffs.fit(X, Y)
+#
+# print('\nSequential Floating Forward Selection (k=3):')
+# print(sffs.k_feature_idx_)
+# print('CV Score:')
+# print(sffs.k_score_)
 
 
 
-from mlxtend.feature_selection import SequentialFeatureSelector as SFS
-# Sequential Floating Forward Selection
-clf = linear_model.LogisticRegression(penalty='l2', tol=1e-3, C=5., random_state=seed)
-# clf = ensemble.RandomForestClassifier(n_estimators=200, max_features=1., max_depth=5, n_jobs=nthread)
-sffs = SFS(clf,
-           k_features=10,
-           forward=True,
-           floating=True,
-           scoring='log_loss',
-           print_progress=True,
-           cv=2,
-           n_jobs=1)
-sffs = sffs.fit(X, Y)
-
-print('\nSequential Floating Forward Selection (k=3):')
-print(sffs.k_feature_idx_)
-print('CV Score:')
-print(sffs.k_score_)
-
-
-
-
-
-
-
-
+# from sklearn.feature_selection import SelectFromModel
+# clf = linear_model.LogisticRegression(random_state=seed, class_weight='balanced')
+# select = SelectFromModel(clf, threshold='median')
+# select.fit(X,Y)
+#
+#
+# cols = pd_data.columns[2:][select.get_support()]
+# DATA3 = (np.array(pd_data[cols]), Y, X_test,test_idx, data_name)
 
 
 
@@ -373,7 +377,7 @@ for clf_indice, data_clf in enumerate(clfs):
 
         if clf_name == 'XGBClassifier':
             dic_logs['params'] = clf.get_params()
-            clf.fit(xtrain, ytrain, eval_set=[(xval, yval)], eval_metric=xgb_accuracy, early_stopping_rounds=300, verbose=True)
+            clf.fit(xtrain, ytrain, eval_set=[(xval, yval)], eval_metric=xgb_accuracy, early_stopping_rounds=20, verbose=True)
 
             dic_logs['best_epoch'].append(clf.best_iteration)
             dic_logs['best_val_metric'].append(clf.best_score)

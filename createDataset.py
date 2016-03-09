@@ -92,6 +92,27 @@ pd_data['nb_nan'] = pd_data.isnull().sum(1)
 cat_var = pdtrain.select_dtypes(["object"]).columns
 cont_var = pdtrain.select_dtypes(["float", "int"]).columns
 
+
+#v91 and v107 are duplicates
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 print('LE cat imputing mean')
 pd_data = pdtrain.append(pdtest)
 name = 'D1'
@@ -105,6 +126,11 @@ for col in pd_data[cont_var]:
 filename = CODE_FOLDER + 'data/{}_[LEcat]_[NA-contvar-mean].p'.format(name)
 print(filename)
 pd_data.to_hdf(filename, 'wb')
+
+
+
+
+
 
 
 print('OH300 imputing mean')
