@@ -3,7 +3,7 @@ __author__ = 'Ardalan'
 CODE_FOLDER = "/home/ardalan/Documents/kaggle/bnp/"
 # CODE_FOLDER = "/home/arda/Documents/kaggle/bnp/"
 
-import os, sys, time, re, zipfile, pickle, operator
+import os, sys, time, re, zipfile, pickle, operator, glob
 import pandas as pd
 import numpy as np
 
@@ -17,6 +17,7 @@ from sklearn import linear_model
 from sklearn import ensemble
 from sklearn import naive_bayes
 from sklearn import svm
+from sklearn import calibration
 
 from keras.preprocessing import text, sequence
 from keras.optimizers import *
@@ -27,6 +28,18 @@ from keras.layers import core, embeddings, recurrent, advanced_activations, norm
 from keras.utils import np_utils
 from keras.callbacks import EarlyStopping
 
+def clipProba(ypredproba):
+    """
+    Taking list of proba and returning a list of clipped proba
+    :param ypredproba:
+    :return: ypredproba clipped
+    """""
+
+    ypredproba = np.where(ypredproba <= 0., 1e-5 , ypredproba)
+    ypredproba = np.where(ypredproba >= 1., 1.-1e-5, ypredproba)
+
+    return ypredproba
+
 def reshapePrediction(ypredproba):
     result = None
     if len(ypredproba.shape) > 1:
@@ -34,9 +47,15 @@ def reshapePrediction(ypredproba):
         if ypredproba.shape[1] == 2: result = ypredproba[:, 1]
     else:
         result = ypredproba.ravel()
+
+    result = clipProba(result)
+
     return result
+
 def eval_func(ytrue, ypredproba):
-    return metrics.log_loss(ytrue, reshapePrediction(ypredproba))
+
+    return metrics.log_loss(ytrue, ypredproba)
+
 def loadFileinZipFile(zip_filename, filename, dtypes=None, parsedate = None, password=None, **kvargs):
     """
     Load file to dataframe.
@@ -49,13 +68,15 @@ def loadFileinZipFile(zip_filename, filename, dtypes=None, parsedate = None, pas
             return pd.read_csv(myzip.open(filename), sep=',', parse_dates=parsedate, dtype=dtypes, **kvargs)
         else:
             return pd.read_csv(myzip.open(filename), sep=',', dtype=dtypes, **kvargs)
+
 def CreateDataFrameFeatureImportance(model, pd_data):
     dic_fi = model.get_fscore()
     df = pd.DataFrame(dic_fi.items(), columns=['feature', 'fscore'])
     df['col_indice'] = df['feature'].apply(lambda r: r.replace('f','')).astype(int)
     df['feat_name'] = df['col_indice'].apply(lambda r: pd_data.columns[r])
     return df.sort('fscore', ascending=False)
-def LoadParseData(l_filenames, folder):
+
+def LoadParseData(l_filenames):
 
     l_X = []
     l_X_test=[]
@@ -64,9 +85,9 @@ def LoadParseData(l_filenames, folder):
         filename = filename[:-2]
         print(filename)
 
-        dic_log = pickle.load(open(folder + filename + '.p','rb'))
+        dic_log = pickle.load(open(filename + '.p','rb'))
 
-        pd_temp = pd.read_csv(folder + filename + '.csv')
+        pd_temp = pd.read_csv(filename + '.csv')
         test_idx = pd_temp['ID'].values.astype(int)
 
         l_X.append(np.hstack(dic_log['ypredproba']))
@@ -79,14 +100,16 @@ def LoadParseData(l_filenames, folder):
     # Y = np.array(l_Y).T
 
     return X, Y, X_test, test_idx
+
 def xgb_accuracy(ypred, dtrain):
         ytrue = dtrain.get_label().astype(int)
-        ypred = np.round(ypred).astype(int)
-        return 'acc', -metrics.accuracy_score(ytrue, ypred)
-def xgb_accuracy(ypred, dtrain):
-        ytrue = dtrain.get_label().astype(int)
-        # ypred = np.round(ypred).astype(int)
+
+        ypred = np.where(ypred <= 0., 1e-5 , ypred)
+        ypred = np.where(ypred >= 1., 1.-1e-5, ypred)
+
+
         return 'logloss', metrics.log_loss(ytrue, ypred)
+
 class NN():
 
     def __init__(self, input_dim, output_dim,
@@ -177,53 +200,96 @@ class NN():
         prediction = self.model.predict_proba(X, verbose=0)
 
         return prediction
+
 def models():
     params = {'n_jobs':nthread,'random_state':seed,'class_weight':None}
 
+    # extra = ensemble.ExtraTreesClassifier(n_estimators=1000,max_features='auto',criterion= 'entropy',min_samples_split= 2, max_depth= None, min_samples_leaf= 1, **params)
+    # extra1 = ensemble.ExtraTreesClassifier(n_estimators=1000,max_features=60,criterion= 'gini',min_samples_split= 4, max_depth= 40, min_samples_leaf= 2, **params)
 
-    # sgd = linear_model.SGDClassifier(loss='log', n_iter=100, class_weight='balanced', penalty='l2', n_jobs=nthread, random_state=seed)
-    # lr = linear_model.LogisticRegression(penalty='l2', tol=1e-3, C=5., **params)
-    # extra = ensemble.ExtraTreesClassifier(criterion='gini',max_depth=None,n_estimators=1000,**params)
-    # extra1 = ensemble.ExtraTreesClassifier(criterion='entropy',max_depth=None,n_estimators=1000,**params)
-    # rf = ensemble.RandomForestClassifier(n_estimators=200, max_features=1., max_depth=5, n_jobs=nthread)
-    # rf = ensemble.RandomForestClassifier(n_estimators=50, max_features=.8, max_depth=10, n_jobs=nthread)
+    # rf = ensemble.RandomForestClassifier(n_estimators=1000,max_features= 'auto',criterion= 'gini',min_samples_split= 2, max_depth= None, min_samples_leaf= 1, **params)
+    # rf1 = ensemble.RandomForestClassifier(n_estimators=1000,max_features=60,criterion= 'entropy',min_samples_split= 4, max_depth= 40, min_samples_leaf= 2, **params)
 
-    # rf1 = ensemble.RandomForestClassifier(criterion="entropy", n_estimators=1000,max_features=20, max_depth=10, **params)
+    # xgb_binlog = XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=5,nthread=nthread, seed=seed)
+    # xgb_reglog = XGBClassifier(objective="reg:logistic", max_depth=10, learning_rate=0.01, n_estimators=5,nthread=nthread, seed=seed)
+    # xgb_poi = XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=5,nthread=nthread, seed=seed)
+    # xgb_reglin = XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=5,nthread=nthread, seed=seed)
 
-    xgb = XGBClassifier(max_depth=3, learning_rate=0.8, n_estimators=1000, nthread=nthread, subsample=1., seed=seed)
-    # xgb1 = XGBClassifier(max_depth=10, learning_rate=0.01, n_estimators=10000, nthread=nthread, subsample=1., seed=seed)
+    rf_params = {'n_estimators':850,'max_features':60,'criterion':'entropy','min_samples_split': 4,'max_depth': 40, 'min_samples_leaf': 2, 'n_jobs': -1}
 
-
-     #NN params
-    nb_epoch = 200
-    batch_size = 128
-    esr = 40
-
-    param1 = {
-        'hidden_units': (256, 32),
-        'activation': (advanced_activations.PReLU(),advanced_activations.PReLU(),core.activations.sigmoid),
-        'dropout': (0., 0.), 'optimizer': RMSprop(), 'nb_epoch': nb_epoch,
-    }
-
-
+    # #NN params
+    # nb_epoch = 3
+    # batch_size = 128
+    # esr = 402
+    #
+    # param1 = {
+    #     'hidden_units': (1024, 1024),
+    #     'activation': (advanced_activations.PReLU(),advanced_activations.PReLU(),core.activations.sigmoid),
+    #     'dropout': (0., 0.), 'optimizer': RMSprop(), 'nb_epoch': nb_epoch,
+    # }
     clfs = [
-        # [DATA, lr]
-        # [DATA, NN(input_dim=DATA[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param1)],
-        # [DATA, sgd],
-        # [DATA, rf],
-        # [DATA, rf1],
-        # [DATA, extra],
-        # [DATA, extra1],
-        [DATA, xgb],
-        # [DATA, xgb1],
+    # (D5, NN(input_dim=D5[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param1))]
+
+
+    # [D1, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
+    # [D3, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
+    # [D4, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
+    # [D5, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
+    # [D6, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
+    # [D7, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
+    # [D9, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
+    # [D10, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
+
+    #
+    (D1, calibration.CalibratedClassifierCV(ensemble.RandomForestClassifier(n_estimators=500, max_depth=5, **params)))
+    # (D1, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread))
+    # (D4, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
+    # (D5, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
+    # (D6, ensemble.RandomForestRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
+    # (D7, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
+    # (D9, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
+    # (D10, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
+
+
+   # (D1, XGBRegressor(objective="reg:linear", max_depth=3, learning_rate=0.05, n_estimators=10000,nthread=nthread, seed=seed)),
+
+    # (D1, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
+    # (D3, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
+    # (D4, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
+    # (D5, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
+    # (D6, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
+    # (D7, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
+    # (D9, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
+    # (D10, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
+
+    # (D1, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D3, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D4, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D5, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D6, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D7, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D9, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D10, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    #
+    # (D1, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D3, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D4, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D5, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D6, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D7, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D9, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D10, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
     ]
-    return clfs
+    for clf in clfs:
+        yield clf
+
 def printResults(dic_logs):
         l_train_logloss = dic_logs['train_error']
         l_val_logloss = dic_logs['val_error']
 
         string = ("logTRVAL_{0:.4f}|{1:.4f}".format(np.mean(l_train_logloss), np.mean(l_val_logloss)))
         return string
+
 def KerasClassWeight(Y_vec):
     # Find the weight of each class as present in y.
     # inversely proportional to the number of samples in the class
@@ -231,87 +297,62 @@ def KerasClassWeight(Y_vec):
     weight = recip_freq / np.mean(recip_freq)
     dic_w = {index:weight_value for index, weight_value in enumerate(weight)}
     return dic_w
+
 def saveDicLogs(dic_logs, filename):
+    try:
+        with open(filename, 'wb') as f:
+            pickle.dump(dic_logs, f, protocol=pickle.HIGHEST_PROTOCOL)
+    except FileNotFoundError:
+        pass
 
-    folder2save = CODE_FOLDER + 'diclogs/'
-    if os.path.exists(folder2save + filename):
-        print('file exist !')
-        raise BrokenPipeError
-    else:
-        # proof_code = open(CODE_FOLDER + 'code/main_CV.py', 'rb').read()
-        # open(folder2save + filename + '.py', 'wb').write(proof_code)
-        pickle.dump(dic_logs, open(folder2save + filename, 'wb'))
-    return
-
-# Params
-#General params
 CV = 'strat'
 STORE = True
 DOTEST = True
+SELECT = False
 n_folds = 10
 test_size = 0.20
 nthread = 12
 seed = 123
 
 
-folder = CODE_FOLDER + 'diclogs/blend/'
-import glob
-l_filenames = glob.glob1(folder, '*.p') ; print(l_filenames)
-# l_filenames = glob.glob1(folder, 'blend*[0-9].p') ; print(l_filenames)
-# l_filenames = glob.glob1(folder, '*.p')
+import fnmatch
+folder = CODE_FOLDER + 'diclogs/stage1/**/*'
+pattern = "*.p"
+
+l_filenames = [path for path in glob.iglob(folder) if fnmatch.fnmatch(path, pattern)]
 print(len(l_filenames), l_filenames)
 
 
-X, Y, X_test, test_idx = LoadParseData(l_filenames, folder)
+
+X, Y, X_test, test_idx = LoadParseData(l_filenames)
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
 
+if SELECT:
+    # selectionTOP = 1000
+    pd_corr = pd.DataFrame(X).corr()
+    mat_corr = np.array(pd_corr)
 
-# selectionTOP = 1000
-pd_corr = pd.DataFrame(X).corr()
-mat_corr = np.array(pd_corr)
-
-cols2keep = []
-thresh = 1.
-for line in range(mat_corr.shape[0]-1):
-    if max(mat_corr[line, line+1:]) < thresh:
-        cols2keep.append(line)
-
-X = X[:, cols2keep]
-X_test = X_test[:, cols2keep]
-print(np.array(l_filenames)[cols2keep])
-
-# from mlxtend.feature_selection import SequentialFeatureSelector as SFS
-# # Sequential Floating Forward Selection
-# # clf = linear_model.LogisticRegression(penalty='l2', tol=1e-3, C=5., random_state=seed)
-# clf = ensemble.RandomForestClassifier(n_estimators=200, max_features=1., max_depth=5, n_jobs=nthread)
-# clf = XGBClassifier()
-# sffs = SFS(clf,
-#            k_features=10,
-#            forward=True,
-#            floating=True,
-#            scoring='log_loss',
-#            print_progress=True,
-#            cv=2,
-#            n_jobs=1)
-# sffs = sffs.fit(X, Y)
-#
-# print('\nSequential Floating Forward Selection (k=3):')
-# print(sffs.k_feature_idx_)
-# print('CV Score:')
-# print(sffs.k_score_)
+    cols2keep = []
+    thresh = .95
+    for line in range(mat_corr.shape[0]-1):
+        if max(mat_corr[line, line+1:]) < thresh:
+            cols2keep.append(line)
 
 
-# X = sffs.transform(X)
 
-DATA = (X, Y, X_test,test_idx)
+    X = X[:, cols2keep]
+    X_test = X_test[:, cols2keep]
+    print(np.array(l_filenames)[cols2keep])
 
+
+D1 = (X, Y, X_test,test_idx, "all")
 
 
 if CV == 'strat': skf = cross_validation.StratifiedShuffleSplit(Y, n_iter=n_folds, test_size=test_size, random_state=seed)
 if CV == 'random': skf = cross_validation.ShuffleSplit(len(Y), n_iter=n_folds, test_size=test_size, random_state=seed)
 
-
 clfs = models()
+
 ##################################################################################
 # CV
 ##################################################################################
@@ -324,13 +365,18 @@ for clf_indice, data_clf in enumerate(clfs):
     X_test = data_clf[0][2]
     test_idx = data_clf[0][3]
 
-    clf = data_clf[1] ; print(clf)
-    clf_name = clf.__class__.__name__
+    clf = data_clf[1]
+    print(clf)
+    clf_class_name = clf.__class__.__name__
+    clf_name = clf_class_name[:3]
+    data_name = data_clf[0][4]
 
     dic_logs = {'name':clf_name, 'fold':[],'ypredproba':[],'yval':[],
                 'params':None,'prepro':None,'best_epoch':[],'best_val_metric':[],
                 'train_error': [], 'val_error':[]}
 
+
+    filename = 'blend_{}_{}_{}f_CV{}'.format(clf_name, data_name,X.shape[1],n_folds)
 
     for fold_indice, (tr_idx, te_idx) in enumerate(skf):
         print("Fold [%i]" % fold_indice)
@@ -339,71 +385,96 @@ for clf_indice, data_clf in enumerate(clfs):
         xval = X[te_idx]
         yval = Y[te_idx]
 
-
-        if clf_name == 'XGBClassifier':
+        if clf_class_name == 'XGBClassifier' or clf_class_name == 'XGBRegressor':
             dic_logs['params'] = clf.get_params()
-            clf.fit(xtrain, ytrain, eval_set=[(xval, yval)], eval_metric=xgb_accuracy,
-                    early_stopping_rounds=50, verbose=1)
+            added_params = ["_{}".format('-'.join(list(map(lambda x: x[:3] ,clf.objective.split(':'))))),
+                            "_d{}".format(clf.max_depth),
+                            "_lr{}".format(clf.learning_rate)
+                            ]
+
+            clf.fit(xtrain, ytrain, eval_set=[(xval, yval)], eval_metric=xgb_accuracy, early_stopping_rounds=200, verbose=True)
 
             dic_logs['best_epoch'].append(clf.best_iteration)
             dic_logs['best_val_metric'].append(clf.best_score)
 
-        elif clf_name == 'NN':
+        elif clf_class_name == 'NN':
             logs = clf.fit(xtrain, ytrain, eval_set=(xval, yval), show_accuracy=True)
 
             dic_logs['params'] = clf.model.get_config()
             dic_logs['best_epoch'].append(np.argmin(logs.history['val_loss']))
             dic_logs['best_val_metric'].append(np.min(logs.history['val_loss']))
 
+        elif clf_class_name == "CalibratedClassifierCV":
+
+            if clf.base_estimator.__class__.__name__ == "RandomForestClassifier" or "ExtraTreesClassifier" :
+                dic_logs['params'] = clf.get_params()
+                added_params = ["_{}".format(clf.base_estimator.__class__.__name__[:3]),
+                    "_{}".format(clf.method[:3]),
+                    "_{}".format(clf.base_estimator.criterion[:3]),
+                    "_md{}".format(clf.base_estimator.max_depth)]
+                clf.fit(xtrain,ytrain)
+
+        elif clf_class_name == "RandomForestRegressor" or clf_class_name == "ExtraTreesRegressor":
+            dic_logs['params'] = clf.get_params()
+            added_params = ["_{}".format(clf.criterion[:3]),
+                            "_md{}".format(clf.max_depth)]
+            clf.fit(xtrain,ytrain)
+
         else:
             dic_logs['params'] = clf.get_params()
+            added_params = [""]
             clf.fit(xtrain, ytrain)
 
-        ypredproba = clf.predict_proba(xval)
-        ypredproba = reshapePrediction(ypredproba)
+        if hasattr(clf, 'predict_proba'):
+            #This is a list (not matrix or else)
+            train_pred = clipProba(reshapePrediction(clf.predict_proba(xtrain)))
+            val_pred = clipProba(reshapePrediction(clf.predict_proba(xval)))
+        elif hasattr(clf, 'predict'):
+            #This is a list (not matrix or else)
+            train_pred = clipProba(reshapePrediction(clf.predict(xtrain)))
+            val_pred = clipProba(reshapePrediction(clf.predict(xval)))
 
-        train_error = eval_func(ytrain, reshapePrediction(clf.predict_proba(xtrain)))
-        val_error = eval_func(yval, ypredproba)
+        #metrics
+        train_error = eval_func(ytrain, train_pred)
+        val_error = eval_func(yval, val_pred)
 
         print("train/val error: [{0:.4f}|{1:.4f}]".format(train_error, val_error))
-        print(metrics.confusion_matrix(yval, ypredproba.round()))
+        print(metrics.confusion_matrix(yval, val_pred.round()))
 
         dic_logs['fold'].append(fold_indice)
-        dic_logs['ypredproba'].append(ypredproba)
+        dic_logs['ypredproba'].append(val_pred)
         dic_logs['yval'].append(yval)
         dic_logs['train_error'].append(train_error)
         dic_logs['val_error'].append(val_error)
 
 
     string_result = printResults(dic_logs)
-    filename = 'blend_{}_{}feats_CV{}_{}'.format(clf_name,X.shape[1],n_folds,string_result)
+    filename += "{}_{}".format(''.join(added_params),string_result)
+
+    print(string_result)
     print(filename)
-    if STORE: saveDicLogs(dic_logs, filename + '.p')
+
+    if STORE: saveDicLogs(dic_logs, CODE_FOLDER + 'diclogs/' + filename + '.p')
 
     if DOTEST:
+
         print('Test prediction...')
-        if clf_name == 'XGBClassifier':
+        if clf_class_name == 'XGBClassifier' or 'XGBRegressor':
             clf.n_estimators = np.mean(dic_logs['best_epoch']).astype(int)
             print("Best n_estimators set to: ", clf.n_estimators)
             clf.fit(X, Y)
-        elif clf_name == 'NN':
+
+        elif clf_class_name == 'NN':
             clf.fit(X, Y)
+
         else:
             clf.fit(X, Y)
 
-        ypredproba = clf.predict_proba(X_test)
-        ypredproba = reshapePrediction(ypredproba)
+        if hasattr(clf, 'predict_proba'):
+            ypredproba = clipProba(reshapePrediction(clf.predict_proba(X_test)))
+        elif hasattr(clf, 'predict'):
+            ypredproba = clipProba(reshapePrediction(clf.predict(X_test)))
 
-        pd_submission = pd.DataFrame({'ID':test_idx, 'PredictedProb':ypredproba})
-        pd_submission.to_csv(CODE_FOLDER + 'diclogs/' + filename + '.csv', index=False)
-
-        dic_fi = clf._Booster.get_fscore()
-        FI = [ ( dic_fi[k], l_filenames[int(k[1:])] )  for k in dic_fi]
-        FI = sorted(FI, reverse=True)
-        with open(CODE_FOLDER + 'diclogs/' + filename + '.FI.txt', 'w') as f: f.write(str(FI))
-
-
-
-
-
-
+        output_filename = CODE_FOLDER + 'diclogs/' + filename + '.csv'
+        np.savetxt(output_filename, np.vstack((test_idx,ypredproba)).T, delimiter=',',
+                   fmt='%i,%.10f'  ,header='ID,PredictedProb', comments="")

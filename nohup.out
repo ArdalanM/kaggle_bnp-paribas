@@ -1,0 +1,10 @@
+Using Theano backend.
+WARNING (theano.sandbox.cuda): CUDA is installed, but device gpu is not available  (error: Unable to get the number of gpus available: no CUDA-capable device is detected)
+Traceback (most recent call last):
+  File "main_CV.py", line 329, in <module>
+    X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D1_[LE-cat]_[NAmean].p')
+  File "main_CV.py", line 94, in LoadParseData
+    pd_data = pd.read_hdf(CODE_FOLDER + "data/" + filename)
+  File "/home/ardalan/Documents/env/P3/lib/python3.4/site-packages/pandas/io/pytables.py", line 303, in read_hdf
+    raise IOError('File %s does not exist' % path_or_buf)
+OSError: File /home/ardalan/Documents/kaggle/bnp/data/D1_[LE-cat]_[NAmean].p does not exist

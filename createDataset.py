@@ -1,5 +1,3 @@
-from Cython.Compiler.Errors import context
-
 __author__ = 'Ardalan'
 
 # CODE_FOLDER = "/home/arda/Documents/kaggle/bnp/"
@@ -90,10 +88,21 @@ pdtrain = loadFileinZipFile(CODE_FOLDER + "data/train.csv.zip", "train.csv")
 pdtest = loadFileinZipFile(CODE_FOLDER + "data/test.csv.zip", "test.csv")
 pdtest['target'] = -1
 pd_data = pdtrain.append(pdtest).reset_index(drop=True)
+pd_data = pd_data.drop(['v107'], 1)
+
+cat_var = list(pd_data.select_dtypes(["object"]).columns)
+cont_var = list(pd_data.select_dtypes(["float", "int"]).columns)
+cont_var.remove('ID')
+cont_var.remove('target')
+
+pd_data['nb_na_cont'] = pd_data[cont_var].isnull().sum(1)
+pd_data['nb_na_cat'] = pd_data[cat_var].isnull().sum(1)
+
+
 
 #D1_NN_LE-cat_NAmean
 #D2_LE-cat_NA-999
-#D3_NN_OH300_NAmean
+#D3_NN_OH00_NAmean
 #D3_OH300_NA-999
 #D4_Only-cont_NA-999
 #D5_NN_Only-cont_NA-mean
@@ -102,17 +111,15 @@ pd_data = pdtrain.append(pdtest).reset_index(drop=True)
 
 
 def model_data(data, LECAT=False, NAMEAN=False, NA999=False, OH=False, ONLYCONT=False, ONLYCAT=False, ONLYCATOH=False,
-               COLSREMOVAL=False, cols=[], maxCategories=30):
+               COLSREMOVAL=False, cols=[], maxCategories=300):
 
-    data = data.drop(['v107'], 1)
-    data['nb_nan'] = data.isnull().sum(1)
-
+    data = data.copy()
 
     cat_var = list(data.select_dtypes(["object"]).columns)
     cont_var = list(data.select_dtypes(["float", "int"]).columns)
 
     if COLSREMOVAL:
-        data.drop(cols, 1, inplace=True)
+        data = data.drop(cols, 1, inplace=False)
         cat_var = list(data.select_dtypes(["object"]).columns)
         cont_var = list(data.select_dtypes(["float", "int"]).columns)
 
@@ -129,7 +136,7 @@ def model_data(data, LECAT=False, NAMEAN=False, NA999=False, OH=False, ONLYCONT=
         for col in data[cat_var]: data[col] = pd.factorize(data[col])[0]
 
     if OH:
-        maxCategories = 30
+        maxCategories = 300
         cols2dummy = [col for col in data[cat_var] if len(data[col].unique()) <= maxCategories]
         colsNot2dummy = [col for col in data[cat_var] if len(data[col].unique()) > maxCategories]
         data = pd.get_dummies(data, dummy_na=True, columns=cols2dummy)
@@ -170,11 +177,11 @@ D2 = model_data(data=pd_data, LECAT=True, NA999=True)
 D2.to_hdf(CODE_FOLDER + 'data/D2_[LE-cat]_[NA-999].p', 'wb')
 
 D3 = model_data(data=pd_data, OH=True, NAMEAN=True)
-D3.to_hdf(CODE_FOLDER + 'data/D3_[OH30]_[NAmean].p', 'wb')
+D3.to_hdf(CODE_FOLDER + 'data/D3_[OH300]_[NAmean].p', 'wb')
 
 
 D4 = model_data(data=pd_data, OH=True, NA999=True)
-D4.to_hdf(CODE_FOLDER + 'data/D4_[OH30]_[NA-999].p', 'wb')
+D4.to_hdf(CODE_FOLDER + 'data/D4_[OH300]_[NA-999].p', 'wb')
 
 D5 = model_data(data=pd_data, ONLYCONT=True, NAMEAN=True)
 D5.to_hdf(CODE_FOLDER + 'data/D5_[OnlyCont]_[NAmean].p', 'wb')
@@ -211,6 +218,9 @@ cols2remove = ['v8','v23','v25','v31','v36','v37','v46',
 D10 = model_data(data=pd_data, COLSREMOVAL=True,  cols=cols2remove, NA999=True, OH=True)
 D10.to_hdf(CODE_FOLDER + 'data/D10_[ColsRemoved]_[NA-999]_[OH].p', 'wb')
 
+
+
+#to drop evgeny
 
 
 
