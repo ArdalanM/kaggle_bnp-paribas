@@ -3,6 +3,9 @@ __author__ = 'Ardalan'
 CODE_FOLDER = "/home/ardalan/Documents/kaggle/bnp/"
 # CODE_FOLDER = "/home/arda/Documents/kaggle/bnp/"
 
+import theano.sandbox.cuda
+theano.sandbox.cuda.use("cpu")
+
 import os, sys, time, re, zipfile, pickle, operator
 import pandas as pd
 import numpy as np
@@ -214,81 +217,34 @@ def models():
     # rf = ensemble.RandomForestClassifier(n_estimators=1000,max_features= 'auto',criterion= 'gini',min_samples_split= 2, max_depth= None, min_samples_leaf= 1, **params)
     # rf1 = ensemble.RandomForestClassifier(n_estimators=1000,max_features=60,criterion= 'entropy',min_samples_split= 4, max_depth= 40, min_samples_leaf= 2, **params)
 
-    # xgb_binlog = XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=5,nthread=nthread, seed=seed)
-    # xgb_reglog = XGBClassifier(objective="reg:logistic", max_depth=10, learning_rate=0.01, n_estimators=5,nthread=nthread, seed=seed)
-    # xgb_poi = XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=5,nthread=nthread, seed=seed)
-    # xgb_reglin = XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=5,nthread=nthread, seed=seed)
-
     rf_params = {'n_estimators':850,'max_features':60,'criterion':'entropy','min_samples_split': 4,'max_depth': 40, 'min_samples_leaf': 2, 'n_jobs': -1}
 
-    # #NN params
-    # nb_epoch = 3
-    # batch_size = 128
-    # esr = 402
-    #
-    # param1 = {
-    #     'hidden_units': (1024, 1024),
-    #     'activation': (advanced_activations.PReLU(),advanced_activations.PReLU(),core.activations.sigmoid),
-    #     'dropout': (0., 0.), 'optimizer': RMSprop(), 'nb_epoch': nb_epoch,
-    # }
+    #NN params
+    nb_epoch = 3
+    batch_size = 128
+    esr = 402
+
+    param1 = {
+        'hidden_units': (256, 256),
+        'activation': (advanced_activations.PReLU(),advanced_activations.PReLU(),core.activations.sigmoid),
+        'dropout': (0., 0.), 'optimizer': RMSprop(), 'nb_epoch': nb_epoch,
+    }
+    param2 = {
+        'hidden_units': (1024, 1024),
+        'activation': (advanced_activations.PReLU(),advanced_activations.PReLU(),core.activations.sigmoid),
+        'dropout': (0., 0.), 'optimizer': RMSprop(), 'nb_epoch': nb_epoch,
+    }
     clfs = [
-    # (D5, NN(input_dim=D5[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param1))]
-
-    # [D1, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D3, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D4, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D5, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D6, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D7, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D9, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D10, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-
-
-    # (D1, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-    # (D3, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-    # (D4, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-    # (D5, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-    # (D6, ensemble.RandomForestRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-    # (D7, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-    # (D9, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-    # (D10, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-
-
-#    (D1, XGBRegressor(objective="reg:linear", max_depth=10, learning_rate=0.05, n_estimators=10000,nthread=nthread, seed=seed)),
-#    (D3, XGBRegressor(objective="reg:linear", max_depth=10, learning_rate=0.05, n_estimators=10000,nthread=nthread, seed=seed)),
-    (D4, XGBRegressor(objective="reg:linear", max_depth=10, learning_rate=0.05, n_estimators=10000,nthread=nthread, seed=seed)),
-    (D5, XGBRegressor(objective="reg:linear", max_depth=10, learning_rate=0.05, n_estimators=10000,nthread=nthread, seed=seed)),
-    (D6, XGBRegressor(objective="reg:linear", max_depth=10, learning_rate=0.05, n_estimators=10000,nthread=nthread, seed=seed)),
-    (D7, XGBRegressor(objective="reg:linear", max_depth=10, learning_rate=0.05, n_estimators=10000,nthread=nthread, seed=seed)),
-    (D9, XGBRegressor(objective="reg:linear", max_depth=10, learning_rate=0.05, n_estimators=10000,nthread=nthread, seed=seed)),
-    (D10, XGBRegressor(objective="reg:linear", max_depth=10, learning_rate=0.05, n_estimators=10000,nthread=nthread, seed=seed)),
-
-    # (D1, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D3, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D4, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D5, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D6, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D7, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D9, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D10, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-
-    # (D1, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D3, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D4, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D5, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D6, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D7, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D9, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D10, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    (D11, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, subsample=.8, n_estimators=10000,nthread=nthread, seed=seed)),
+    (D11, XGBRegressor(objective="reg:linear" ,max_depth=10, learning_rate=0.01, subsample=.8, n_estimators=10000,nthread=nthread, seed=seed)),
+    # (D1, NN(input_dim=D1[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param1)),
+    # (D3, NN(input_dim=D3[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2,loss='binary_crossentropy', class_mode='binary', **param1)),
+    # (D5, NN(input_dim=D5[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2,loss='binary_crossentropy', class_mode='binary', **param1)),
     #
-    # (D1, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D3, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D4, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D5, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D6, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D7, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D9, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D10, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
+    # (D1, NN(input_dim=D1[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2,loss='binary_crossentropy', class_mode='binary', **param2)),
+    # (D3, NN(input_dim=D3[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2,loss='binary_crossentropy', class_mode='binary', **param2)),
+    # (D5, NN(input_dim=D5[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2,loss='binary_crossentropy', class_mode='binary', **param2))
+
     ]
     for clf in clfs:
         yield clf
@@ -326,46 +282,50 @@ nthread = 12
 seed = 123
 
 
-X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D1_[LE-cat]_[NAmean].p')
+# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D1_[LE-cat]_[NAmean].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-D1 = (X, Y, X_test,test_idx, data_name)
+# D1 = (X, Y, X_test,test_idx, data_name)
 
 # X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D2_[LE-cat]_[NA-999].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
 # D2 = (X, Y, X_test,test_idx, data_name)
 #
-X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D3_[OH300]_[NAmean].p')
+# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D3_[OH300]_[NAmean].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-D3 = (X, Y, X_test,test_idx, data_name)
+# D3 = (X, Y, X_test,test_idx, data_name)
 #
-X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D4_[OH300]_[NA-999].p')
+# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D4_[OH300]_[NA-999].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-D4 = (X, Y, X_test,test_idx, data_name)
+# D4 = (X, Y, X_test,test_idx, data_name)
 #
-X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D5_[OnlyCont]_[NAmean].p')
+# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D5_[OnlyCont]_[NAmean].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-D5 = (X, Y, X_test,test_idx, data_name)
+# D5 = (X, Y, X_test,test_idx, data_name)
+# #
+# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D6_[OnlyCatLE].p')
+# X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
+# D6 = (X, Y, X_test,test_idx, data_name)
 #
-X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D6_[OnlyCatLE].p')
+# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D7_[OnlyCatOH].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-D6 = (X, Y, X_test,test_idx, data_name)
-#
-X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D7_[OnlyCatOH].p')
-# X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-D7 = (X, Y, X_test,test_idx, data_name)
+# D7 = (X, Y, X_test,test_idx, data_name)
 #
 # X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D8_[ColsRemoved]_[Namean]_[OH].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
 # D8 = (X, Y, X_test,test_idx, data_name)
 #
-X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D9_[ColsRemoved]_[NA-999]_[LE-cat].p')
-X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-D9 = (X, Y, X_test,test_idx, data_name)
+# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D9_[ColsRemoved]_[NA-999]_[LE-cat].p')
+# X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
+# D9 = (X, Y, X_test,test_idx, data_name)
 #
-X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D10_[ColsRemoved]_[NA-999]_[OH].p')
-X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-D10 = (X, Y, X_test,test_idx, data_name)
+# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D10_[ColsRemoved]_[NA-999]_[OH].p')
+# X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
+# D10 = (X, Y, X_test,test_idx, data_name)
 
+
+X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D11_[OH1000]_[NA-999].p')
+# X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
+D11 = (X, Y, X_test,test_idx, data_name)
 
 if CV == 'strat': skf = cross_validation.StratifiedShuffleSplit(Y, n_iter=n_folds, test_size=test_size, random_state=seed)
 if CV == 'random': skf = cross_validation.ShuffleSplit(len(Y), n_iter=n_folds, test_size=test_size, random_state=seed)
@@ -404,19 +364,20 @@ for clf_indice, data_clf in enumerate(clfs):
         xval = X[te_idx]
         yval = Y[te_idx]
 
-        if clf_class_name == 'XGBClassifier' or 'XGBRegressor':
+        if clf_class_name == 'XGBClassifier' or clf_class_name =='XGBRegressor':
             dic_logs['params'] = clf.get_params()
             added_params = ["_{}".format('-'.join(list(map(lambda x: x[:3] ,clf.objective.split(':'))))),
                             "_d{}".format(clf.max_depth),
                             "_lr{}".format(clf.learning_rate)
                             ]
 
-            clf.fit(xtrain, ytrain, eval_set=[(xval, yval)], eval_metric=xgb_accuracy, early_stopping_rounds=200, verbose=True)
+            clf.fit(xtrain, ytrain, eval_set=[(xval, yval)], eval_metric=xgb_accuracy, early_stopping_rounds=100, verbose=True)
 
             dic_logs['best_epoch'].append(clf.best_iteration)
             dic_logs['best_val_metric'].append(clf.best_score)
 
         elif clf_class_name == 'NN':
+            added_params = [""]
             logs = clf.fit(xtrain, ytrain, eval_set=(xval, yval), show_accuracy=True)
 
             dic_logs['params'] = clf.model.get_config()

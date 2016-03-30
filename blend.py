@@ -217,68 +217,14 @@ def models():
 
     rf_params = {'n_estimators':850,'max_features':60,'criterion':'entropy','min_samples_split': 4,'max_depth': 40, 'min_samples_leaf': 2, 'n_jobs': -1}
 
-    # #NN params
-    # nb_epoch = 3
-    # batch_size = 128
-    # esr = 402
-    #
-    # param1 = {
-    #     'hidden_units': (1024, 1024),
-    #     'activation': (advanced_activations.PReLU(),advanced_activations.PReLU(),core.activations.sigmoid),
-    #     'dropout': (0., 0.), 'optimizer': RMSprop(), 'nb_epoch': nb_epoch,
-    # }
     clfs = [
-    # (D5, NN(input_dim=D5[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param1))]
+        # (D1, XGBRegressor(objective="reg:linear", max_depth=6, learning_rate=0.01, subsample=.8, n_estimators=2000,nthread=nthread, seed=seed)),
+        (D1, XGBClassifier(objective="binary:logistic" ,max_depth=6, learning_rate=0.01, subsample=.8, n_estimators=2000,nthread=nthread, seed=seed)),
+        # (D1, XGBRegressor(objective="reg:linear", max_depth=5, learning_rate=0.01, subsample=.8, n_estimators=2000,nthread=nthread, seed=seed)),
+        # (D1,XGBClassifier(objective="binary:logistic", max_depth=5, learning_rate=0.01, subsample=.8, n_estimators=2000,nthread=nthread, seed=seed)),
+        # (D1, XGBRegressor(objective="reg:linear", max_depth=4, learning_rate=0.01, subsample=.8, n_estimators=2000,nthread=nthread, seed=seed)),
+        # (D1,XGBClassifier(objective="binary:logistic", max_depth=4, learning_rate=0.01, subsample=.8, n_estimators=2000,nthread=nthread, seed=seed)),
 
-
-    # [D1, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D3, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D4, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D5, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D6, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D7, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D9, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-    # [D10, linear_model.LogisticRegression(class_weight='balanced', random_state=seed, n_jobs=nthread)],
-
-    #
-    (D1, calibration.CalibratedClassifierCV(ensemble.RandomForestClassifier(n_estimators=500, max_depth=5, **params)))
-    # (D1, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread))
-    # (D4, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-    # (D5, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-    # (D6, ensemble.RandomForestRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-    # (D7, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-    # (D9, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-    # (D10, ensemble.ExtraTreesRegressor(n_estimators=1000, criterion='mse', max_features=100, max_depth=50, random_state=seed, n_jobs=nthread)),
-
-
-   # (D1, XGBRegressor(objective="reg:linear", max_depth=3, learning_rate=0.05, n_estimators=10000,nthread=nthread, seed=seed)),
-
-    # (D1, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D3, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D4, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D5, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D6, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D7, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D9, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-    # (D10, XGBClassifier(objective="count:poisson", max_depth=10, learning_rate=0.01, n_estimators=10000,nthread=nthread, seed=seed)),
-
-    # (D1, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D3, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D4, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D5, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D6, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D7, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D9, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D10, XGBClassifier(objective="reg:linear", max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    #
-    # (D1, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D3, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D4, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D5, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D6, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D7, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D9, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
-    # (D10, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, n_estimators=8,nthread=nthread, seed=seed)),
     ]
     for clf in clfs:
         yield clf
@@ -309,14 +255,15 @@ CV = 'strat'
 STORE = True
 DOTEST = True
 SELECT = False
-n_folds = 10
+n_folds = 5
 test_size = 0.20
-nthread = 12
+nthread = 4
 seed = 123
 
 
 import fnmatch
 folder = CODE_FOLDER + 'diclogs/stage1/**/*'
+pattern = "*XGB*.p"
 pattern = "*.p"
 
 l_filenames = [path for path in glob.iglob(folder) if fnmatch.fnmatch(path, pattern)]
@@ -327,11 +274,11 @@ print(len(l_filenames), l_filenames)
 X, Y, X_test, test_idx = LoadParseData(l_filenames)
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
 
+pd_corr = pd.DataFrame(X).corr()
+mat_corr = np.array(pd_corr)
+
 if SELECT:
     # selectionTOP = 1000
-    pd_corr = pd.DataFrame(X).corr()
-    mat_corr = np.array(pd_corr)
-
     cols2keep = []
     thresh = .95
     for line in range(mat_corr.shape[0]-1):
@@ -392,7 +339,7 @@ for clf_indice, data_clf in enumerate(clfs):
                             "_lr{}".format(clf.learning_rate)
                             ]
 
-            clf.fit(xtrain, ytrain, eval_set=[(xval, yval)], eval_metric=xgb_accuracy, early_stopping_rounds=200, verbose=True)
+            clf.fit(xtrain, ytrain, eval_set=[(xval, yval)], eval_metric=xgb_accuracy, early_stopping_rounds=50, verbose=True)
 
             dic_logs['best_epoch'].append(clf.best_iteration)
             dic_logs['best_val_metric'].append(clf.best_score)

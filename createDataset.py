@@ -99,6 +99,24 @@ pd_data['nb_na_cont'] = pd_data[cont_var].isnull().sum(1)
 pd_data['nb_na_cat'] = pd_data[cat_var].isnull().sum(1)
 
 
+#Hexa stuff v22
+pd_data['v22'].fillna('', inplace=True)
+# Padding v22 to 4 characters allows sorting to work correctly
+padded = pd_data['v22'].str.pad(4)
+spadded = sorted(np.unique(padded))
+
+# Map sorted v22 values so they wind up in the best order
+v22_map = {}
+c = 0
+for i in spadded:
+    v22_map[i] = c
+    c += 1
+
+# Now apply to v22
+pd_data['v22']= padded.apply(lambda r: v22_map[r] if r in v22_map else -1)
+
+
+
 
 #D1_NN_LE-cat_NAmean
 #D2_LE-cat_NA-999
@@ -110,8 +128,7 @@ pd_data['nb_na_cat'] = pd_data[cat_var].isnull().sum(1)
 #D6_Only-Cat_OH
 
 
-def model_data(data, LECAT=False, NAMEAN=False, NA999=False, OH=False, ONLYCONT=False, ONLYCAT=False, ONLYCATOH=False,
-               COLSREMOVAL=False, cols=[], maxCategories=300):
+def model_data(data, LECAT=False, NAMEAN=False, NA999=False, OH=False, ONLYCONT=False, ONLYCAT=False, ONLYCATOH=False, COLSREMOVAL=False, cols=[], maxCategories=300):
 
     data = data.copy()
 
@@ -136,7 +153,6 @@ def model_data(data, LECAT=False, NAMEAN=False, NA999=False, OH=False, ONLYCONT=
         for col in data[cat_var]: data[col] = pd.factorize(data[col])[0]
 
     if OH:
-        maxCategories = 300
         cols2dummy = [col for col in data[cat_var] if len(data[col].unique()) <= maxCategories]
         colsNot2dummy = [col for col in data[cat_var] if len(data[col].unique()) > maxCategories]
         data = pd.get_dummies(data, dummy_na=True, columns=cols2dummy)
@@ -144,7 +160,7 @@ def model_data(data, LECAT=False, NAMEAN=False, NA999=False, OH=False, ONLYCONT=
         #binning
         for col in colsNot2dummy:
             data[col] = pd.factorize(data[col])[0]
-            dcb = DummycolumnsBins(cols=col, prefix=col, nb_bins=20)
+            dcb = DummycolumnsBins(cols=col, prefix=col, nb_bins=2000)
             dcb.fit(data)
             pd_binned = dcb.transform(data)
             data = pd.concat([data,pd_binned],1)
@@ -218,15 +234,11 @@ cols2remove = ['v8','v23','v25','v31','v36','v37','v46',
 D10 = model_data(data=pd_data, COLSREMOVAL=True,  cols=cols2remove, NA999=True, OH=True)
 D10.to_hdf(CODE_FOLDER + 'data/D10_[ColsRemoved]_[NA-999]_[OH].p', 'wb')
 
-
-
-#to drop evgeny
-
-
-
-
-
-
+D11 = model_data(data=pd_data, OH=True, NA999=True, maxCategories=1000)
+for col in D11:
+    if "_" in col:
+        D11[col] = D11[col].astype(int)
+D11.to_hdf(CODE_FOLDER + 'data/D11_[OH1000]_[NA-999].p', 'wb')
 
 
 
