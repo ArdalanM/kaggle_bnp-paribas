@@ -2,6 +2,7 @@ __author__ = 'Ardalan'
 
 CODE_FOLDER = "/home/ardalan/Documents/kaggle/bnp/"
 # CODE_FOLDER = "/home/arda/Documents/kaggle/bnp/"
+SAVE_FOLDER = CODE_FOLDER + "/diclogs/stage1/"
 
 import theano.sandbox.cuda
 theano.sandbox.cuda.use("cpu")
@@ -59,43 +60,29 @@ def eval_func(ytrue, ypredproba):
 
     return metrics.log_loss(ytrue, ypredproba)
 
-def loadFileinZipFile(zip_filename, filename, dtypes=None, parsedate = None, password=None, **kvargs):
-    """
-    Load file to dataframe.
-    """
-    with zipfile.ZipFile(zip_filename, 'r') as myzip:
-        if password:
-            myzip.setpassword(password)
 
-        if parsedate:
-            return pd.read_csv(myzip.open(filename), sep=',', parse_dates=parsedate, dtype=dtypes, **kvargs)
-        else:
-            return pd.read_csv(myzip.open(filename), sep=',', dtype=dtypes, **kvargs)
+def str_feat_importance(model, col_features):
 
-def CreateDataFrameFeatureImportance(model, pd_data):
     dic_fi = model.get_fscore()
-    df = pd.DataFrame(dic_fi.items(), columns=['feature', 'fscore'])
-    df['col_indice'] = df['feature'].apply(lambda r: r.replace('f','')).astype(int)
-    df['feat_name'] = df['col_indice'].apply(lambda r: pd_data.columns[r])
-    return df.sort('fscore', ascending=False)
+
+    #getting somithing like [(f0, score), (f1, score)]
+    importance = [(col_features[int(key[1:])], dic_fi[key]) for key in dic_fi]
+
+    #same but sorted by score
+    importance = sorted(importance, key=operator.itemgetter(1), reverse=True)
+
+    sum_importance = np.sum([score for feat, score in importance])
+
+    l=[]
+    for rank, (feat, score) in enumerate(importance):
+        l.append("{}, {:.3f}, {}\n".format(rank, score / sum_importance, feat))
+    return "".join(l)
 
 def LoadParseData(filename):
 
-    cont_var = ['ID', 'target', 'v1', 'v2', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13',
-                'v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v23', 'v25', 'v26', 'v27', 'v28',
-                'v29', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42', 'v43',
-                'v44', 'v45', 'v46', 'v48', 'v49', 'v50', 'v51', 'v53', 'v54', 'v55', 'v57', 'v58', 'v59',
-                'v60', 'v61', 'v62', 'v63', 'v64', 'v65', 'v67', 'v68', 'v69', 'v70', 'v72', 'v73', 'v76',
-                'v77', 'v78', 'v80', 'v81', 'v82', 'v83', 'v84', 'v85', 'v86', 'v87', 'v88', 'v89', 'v90',
-                'v92', 'v93', 'v94', 'v95', 'v96', 'v97', 'v98', 'v99', 'v100', 'v101', 'v102', 'v103', 'v104',
-                'v105', 'v106', 'v108', 'v109', 'v111', 'v114', 'v115', 'v116', 'v117', 'v118', 'v119', 'v120',
-                'v121', 'v122', 'v123', 'v124', 'v126', 'v127', 'v128', 'v129', 'v130', 'v131']
-
-
-
     data_name = filename.split('_')[0]
     pd_data = pd.read_hdf(CODE_FOLDER + "data/" + filename)
-
+    cols_features = pd_data.drop(['ID', 'target'], 1).columns.tolist()
 
     pd_train = pd_data[pd_data.target >= 0]
     pd_test = pd_data[pd_data.target == -1]
@@ -106,7 +93,7 @@ def LoadParseData(filename):
     X = np.array(pd_train.drop(['ID', 'target'],1))
     X_test = np.array(pd_test.drop(['ID','target'], 1))
 
-    return X, Y, X_test, test_idx, pd_data, data_name
+    return X, Y, X_test, test_idx, pd_data, data_name, cols_features
 
 def xgb_accuracy(ypred, dtrain):
         ytrue = dtrain.get_label().astype(int)
@@ -209,15 +196,22 @@ class NN():
         return prediction
 
 def models():
-    params = {'n_jobs':nthread,'random_state':seed,'class_weight':None}
 
-    # extra = ensemble.ExtraTreesClassifier(n_estimators=1000,max_features='auto',criterion= 'entropy',min_samples_split= 2, max_depth= None, min_samples_leaf= 1, **params)
-    # extra1 = ensemble.ExtraTreesClassifier(n_estimators=1000,max_features=60,criterion= 'gini',min_samples_split= 4, max_depth= 40, min_samples_leaf= 2, **params)
+    extra_params_kaggle_cla = {'n_estimators':1200,'max_features':30,'criterion':'entropy',
+                           'min_samples_leaf': 2, 'min_samples_split': 2,'max_depth': 30,
+                           'min_samples_leaf': 2, 'n_jobs':nthread, 'random_state':seed}
 
-    # rf = ensemble.RandomForestClassifier(n_estimators=1000,max_features= 'auto',criterion= 'gini',min_samples_split= 2, max_depth= None, min_samples_leaf= 1, **params)
-    # rf1 = ensemble.RandomForestClassifier(n_estimators=1000,max_features=60,criterion= 'entropy',min_samples_split= 4, max_depth= 40, min_samples_leaf= 2, **params)
+    extra_params_kaggle_reg = {'n_estimators':1200,'max_features':30,'criterion':'mse',
+                           'min_samples_leaf': 2, 'min_samples_split': 2,'max_depth': 30,
+                           'min_samples_leaf': 2, 'n_jobs':nthread, 'random_state':seed}
 
-    rf_params = {'n_estimators':850,'max_features':60,'criterion':'entropy','min_samples_split': 4,'max_depth': 40, 'min_samples_leaf': 2, 'n_jobs': -1}
+
+    xgb_reg = {'objective':'reg:linear', 'max_depth': 11, 'learning_rate':0.01, 'subsample':.9,
+           'n_estimators':10000, 'colsample_bytree':0.45, 'nthread':nthread, 'seed':seed}
+
+    xgb_cla = {'objective':'binary:logistic', 'max_depth': 11, 'learning_rate':0.01, 'subsample':.9,
+           'n_estimators':10000, 'colsample_bytree':0.45, 'nthread':nthread, 'seed':seed}
+
 
     #NN params
     nb_epoch = 3
@@ -235,10 +229,18 @@ def models():
         'dropout': (0., 0.), 'optimizer': RMSprop(), 'nb_epoch': nb_epoch,
     }
     clfs = [
+        (D2, XGBClassifier(**xgb_cla)),
+        (D11, XGBClassifier(**xgb_cla)),
 
+        (D2, XGBRegressor(**xgb_reg)),
+        (D11, XGBRegressor(**xgb_reg)),
 
-    (D11, XGBClassifier(objective="binary:logistic" ,max_depth=11, learning_rate=0.01, subsample=.9, n_estimators=10000, colsample_bytree=0.45, nthread=nthread, seed=seed)),
-    (D11, XGBRegressor(objective="reg:linear"  ,max_depth=11, learning_rate=0.01, subsample=.9, n_estimators=10000, colsample_bytree=0.45, nthread=nthread, seed=seed)),
+        (D2, ensemble.ExtraTreesClassifier(**extra_params_kaggle_cla)),
+        (D11, ensemble.ExtraTreesClassifier(**extra_params_kaggle_cla)),
+
+        (D2, ensemble.ExtraTreesRegressor(**extra_params_kaggle_reg)),
+        (D11, ensemble.ExtraTreesRegressor(**extra_params_kaggle_reg)),
+
     # (D1, NN(input_dim=D1[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param1)),
     # (D3, NN(input_dim=D3[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2,loss='binary_crossentropy', class_mode='binary', **param1)),
     # (D5, NN(input_dim=D5[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2,loss='binary_crossentropy', class_mode='binary', **param1)),
@@ -255,7 +257,7 @@ def printResults(dic_logs):
         l_train_logloss = dic_logs['train_error']
         l_val_logloss = dic_logs['val_error']
 
-        string = ("logTRVAL_{0:.4f}|{1:.4f}".format(np.mean(l_train_logloss), np.mean(l_val_logloss)))
+        string = ("{0:.4f}-{1:.4f}".format(np.mean(l_train_logloss), np.mean(l_val_logloss)))
         return string
 
 def KerasClassWeight(Y_vec):
@@ -273,112 +275,125 @@ def saveDicLogs(dic_logs, filename):
     except FileNotFoundError:
         pass
 
-# Params
-#General params
-CV = 'strat'
+# General params
 STORE = True
-DOTEST = True
 n_folds = 5
-test_size = 0.20
-nthread = 12
+nthread = 8
 seed = 123
 
 
-# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D1_[LE-cat]_[NAmean].p')
+# X, Y, X_test, test_idx, pd_data, data_name, col_feats = LoadParseData('D1_[LE-cat]_[NAmean].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
 # D1 = (X, Y, X_test,test_idx, data_name)
 
-# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D2_[LE-cat]_[NA-999].p')
+X, Y, X_test, test_idx, pd_data, data_name, col_feats = LoadParseData('D2_[LE-cat]_[NA-999].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-# D2 = (X, Y, X_test,test_idx, data_name)
+D2 = (X, Y, X_test, test_idx, data_name, col_feats)
 #
-# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D3_[OH300]_[NAmean].p')
+# X, Y, X_test, test_idx, pd_data, data_name, col_feats = LoadParseData('D3_[OH300]_[NAmean].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-# D3 = (X, Y, X_test,test_idx, data_name)
+# D3 = (X, Y, X_test, test_idx, data_name, col_feats)
 #
-# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D4_[OH300]_[NA-999].p')
+# X, Y, X_test, test_idx, pd_data, data_name, col_feats = LoadParseData('D4_[OH300]_[NA-999].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-# D4 = (X, Y, X_test,test_idx, data_name)
+# D4 = (X, Y, X_test, test_idx, data_name, col_feats)
 #
-# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D5_[OnlyCont]_[NAmean].p')
+# X, Y, X_test, test_idx, pd_data, data_name, col_feats = LoadParseData('D5_[OnlyCont]_[NAmean].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-# D5 = (X, Y, X_test,test_idx, data_name)
+# D5 = (X, Y, X_test, test_idx, data_name, col_feats)
 # #
-# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D6_[OnlyCatLE].p')
+# X, Y, X_test, test_idx, pd_data, data_name, col_feats = LoadParseData('D6_[OnlyCatLE].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-# D6 = (X, Y, X_test,test_idx, data_name)
+# D6 = (X, Y, X_test, test_idx, data_name, col_feats)
 #
-# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D7_[OnlyCatOH].p')
+# X, Y, X_test, test_idx, pd_data, data_name, col_feats = LoadParseData('D7_[OnlyCatOH].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-# D7 = (X, Y, X_test,test_idx, data_name)
+# D7 = (X, Y, X_test, test_idx, data_name, col_feats)
 #
-# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D8_[ColsRemoved]_[Namean]_[OH].p')
+# X, Y, X_test, test_idx, pd_data, data_name, col_feats = LoadParseData('D8_[ColsRemoved]_[Namean]_[OH].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-# D8 = (X, Y, X_test,test_idx, data_name)
+# D8 = (X, Y, X_test, test_idx, data_name, col_feats)
 #
-# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D9_[ColsRemoved]_[NA-999]_[LE-cat].p')
+# X, Y, X_test, test_idx, pd_data, data_name, col_feats = LoadParseData('D9_[ColsRemoved]_[NA-999]_[LE-cat].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-# D9 = (X, Y, X_test,test_idx, data_name)
+# D9 = (X, Y, X_test, test_idx, data_name, col_feats)
 #
-# X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D10_[ColsRemoved]_[NA-999]_[OH].p')
+# X, Y, X_test, test_idx, pd_data, data_name, col_feats = LoadParseData('D10_[ColsRemoved]_[NA-999]_[OH].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-# D10 = (X, Y, X_test,test_idx, data_name)
+# D10 = (X, Y, X_test, test_idx, data_name, col_feats)
 
 
-X, Y, X_test, test_idx, pd_data, data_name = LoadParseData('D11_[OH1000]_[NA-999].p')
+X, Y, X_test, test_idx, pd_data, data_name, col_feats = LoadParseData('D11_[OH1000]_[NA-999].p')
 # X = StandardScaler().fit_transform(X) ; X_test = StandardScaler().fit_transform(X_test)
-D11 = (X, Y, X_test,test_idx, data_name)
+D11 = (X, Y, X_test, test_idx, data_name, col_feats)
 
-if CV == 'strat': skf = cross_validation.StratifiedShuffleSplit(Y, n_iter=n_folds, test_size=test_size, random_state=seed)
-if CV == 'random': skf = cross_validation.ShuffleSplit(len(Y), n_iter=n_folds, test_size=test_size, random_state=seed)
-
+skf = cross_validation.StratifiedKFold(Y, n_folds=n_folds, shuffle=True, random_state=seed)
 clfs = models()
 
-##################################################################################
-# CV
-##################################################################################
+#CV
 for clf_indice, data_clf in enumerate(clfs):
 
     print('-' * 50)
     print("Classifier [%i]" % clf_indice)
-    X = data_clf[0][0] ; print(X.shape)
+    X = data_clf[0][0]
     Y = data_clf[0][1]
     X_test = data_clf[0][2]
     test_idx = data_clf[0][3]
+    print(X.shape)
 
-    clf = data_clf[1]
-    print(clf)
-    clf_class_name = clf.__class__.__name__
-    clf_name = clf_class_name[:3]
+    clf = data_clf[1] ; print(clf)
+    clf_name = clf.__class__.__name__
+    clf_name_short = clf_name[:3]
+
     data_name = data_clf[0][4]
+    cols_name = data_clf[0][5]
 
-    dic_logs = {'name':clf_name, 'fold':[],'ypredproba':[],'yval':[],
-                'params':None,'prepro':None,'best_epoch':[],'best_val_metric':[],
-                'train_error': [], 'val_error':[]}
+    blend_X = np.zeros((len(X), 1))
+    blend_X_test = np.zeros((len(X_test), 1))
+    blend_X_test_fold = np.zeros((len(X_test), len(skf)))
 
+    dic_logs = {'name': clf_name, 'feat_importance': None,
+                'blend_X': blend_X, 'blend_Y': Y, 'blend_X_test': blend_X_test, 'test_idx': test_idx,
+                'params': None, 'prepro': None, 'best_epoch': [], 'best_val_metric': [],
+                'train_error': [], 'val_error': []}
 
-    filename = '{}_{}_{}f_CV{}'.format(clf_name, data_name,X.shape[1],n_folds)
+    filename = '{}_{}_{}f_CV{}'.format(clf_name_short, data_name,X.shape[1],n_folds)
 
-    for fold_indice, (tr_idx, te_idx) in enumerate(skf):
+    for fold_indice, (train_indices, val_indices) in enumerate(skf):
         print("Fold [%i]" % fold_indice)
-        xtrain = X[tr_idx]
-        ytrain = Y[tr_idx]
-        xval = X[te_idx]
-        yval = Y[te_idx]
+        xtrain = X[train_indices]
+        ytrain = Y[train_indices]
+        xval = X[val_indices]
+        yval = Y[val_indices]
 
-        if clf_class_name == 'XGBClassifier' or clf_class_name =='XGBRegressor':
-            dic_logs['params'] = clf.get_params()
-            added_params = ["_{}".format('-'.join(list(map(lambda x: x[:3] ,clf.objective.split(':'))))),
+        if clf_name[:3] == 'XGB':
+
+            added_params = ["_{}".format('-'.join(list(map(lambda x: x[:3], clf.objective.split(':'))))),
                             "_d{}".format(clf.max_depth),
                             "_lr{}".format(clf.learning_rate)
                             ]
 
-            clf.fit(xtrain, ytrain, eval_set=[(xval, yval)], eval_metric=xgb_accuracy, early_stopping_rounds=100, verbose=True)
+            clf.fit(xtrain, ytrain, eval_set=[(xval, yval)], eval_metric=xgb_accuracy,
+                    early_stopping_rounds=300, verbose=True)
 
+            dic_logs['params'] = clf.get_params()
+            dic_logs['feat_importance'] = str_feat_importance(clf._Booster, cols_name)
             dic_logs['best_epoch'].append(clf.best_iteration)
             dic_logs['best_val_metric'].append(clf.best_score)
 
-        elif clf_class_name == 'NN':
+            if hasattr(clf, 'predict_proba'):
+
+                train_pred = reshapePrediction(clf.predict_proba(xtrain, ntree_limit=clf.best_ntree_limit))
+                val_pred = reshapePrediction(clf.predict_proba(xval, ntree_limit=clf.best_ntree_limit))
+                test_pred = reshapePrediction(clf.predict_proba(X_test, ntree_limit=clf.best_ntree_limit))
+
+            elif hasattr(clf, 'predict'):
+
+                train_pred = reshapePrediction(clf.predict(xtrain, ntree_limit=clf.best_ntree_limit))
+                val_pred = reshapePrediction(clf.predict(xval, ntree_limit=clf.best_ntree_limit))
+                test_pred = reshapePrediction(clf.predict(X_test, ntree_limit=clf.best_ntree_limit))
+
+        elif clf_name == 'NN':
             added_params = [""]
             logs = clf.fit(xtrain, ytrain, eval_set=(xval, yval), show_accuracy=True)
 
@@ -386,34 +401,83 @@ for clf_indice, data_clf in enumerate(clfs):
             dic_logs['best_epoch'].append(np.argmin(logs.history['val_loss']))
             dic_logs['best_val_metric'].append(np.min(logs.history['val_loss']))
 
-        elif clf_class_name == "CalibratedClassifierCV":
-            if clf.base_estimator.__class__.__name__ == "RandomForestClassifier" or clf.base_estimator.__class__.__name__ == "ExtraTreesClassifier" :
+            if hasattr(clf, 'predict_proba'):
+
+                train_pred = reshapePrediction(clf.predict_proba(xtrain))
+                val_pred = reshapePrediction(clf.predict_proba(xval))
+                test_pred = reshapePrediction(clf.predict_proba(X_test))
+
+            elif hasattr(clf, 'predict'):
+
+                train_pred = reshapePrediction(clf.predict(xtrain))
+                val_pred = reshapePrediction(clf.predict(xval))
+                test_pred = reshapePrediction(clf.predict(X_test))
+
+        elif clf_name == "CalibratedClassifierCV":
+            sub_clf_name = clf.base_estimator.__class__.__name__
+            sub_clf = clf.base_estimator
+            if sub_clf_name == "RandomForestClassifier" or sub_clf_name == "ExtraTreesClassifier" :
                 dic_logs['params'] = clf.get_params()
-                added_params = ["_{}".format(clf.base_estimator.__class__.__name__[:3]),
+                added_params = [
+                    "_{}".format(sub_clf_name[:3]),
                     "_{}".format(clf.method[:3]),
-                    "_{}".format(clf.base_estimator.criterion[:3]),
-                    "_md{}".format(clf.base_estimator.max_depth)]
+                    "_{}".format(sub_clf.criterion[:3]),
+                    "_md{}".format(sub_clf.max_depth)
+                ]
                 clf.fit(xtrain,ytrain)
 
-        elif clf_class_name == "RandomForestRegressor" or "ExtraTreesRegressor":
+            if hasattr(clf, 'predict_proba'):
+
+                train_pred = reshapePrediction(clf.predict_proba(xtrain))
+                val_pred = reshapePrediction(clf.predict_proba(xval))
+                test_pred = reshapePrediction(clf.predict_proba(X_test))
+
+            elif hasattr(clf, 'predict'):
+
+                train_pred = reshapePrediction(clf.predict(xtrain))
+                val_pred = reshapePrediction(clf.predict(xval))
+                test_pred = reshapePrediction(clf.predict(X_test))
+
+        elif clf_name == "RandomForestRegressor" or clf_name == "ExtraTreesRegressor":
             dic_logs['params'] = clf.get_params()
-            added_params = ["_{}".format(clf.criterion[:3]),
-                            "_md{}".format(clf.max_depth)]
-            clf.fit(xtrain,ytrain)
+            added_params = [
+                "_{}".format(clf.criterion[:3]),
+                "_md{}".format(clf.max_depth)
+            ]
+            clf.fit(xtrain, ytrain)
+
+            if hasattr(clf, 'predict_proba'):
+
+                train_pred = reshapePrediction(clf.predict_proba(xtrain))
+                val_pred = reshapePrediction(clf.predict_proba(xval))
+                test_pred = reshapePrediction(clf.predict_proba(X_test))
+
+            elif hasattr(clf, 'predict'):
+
+                train_pred = reshapePrediction(clf.predict(xtrain))
+                val_pred = reshapePrediction(clf.predict(xval))
+                test_pred = reshapePrediction(clf.predict(X_test))
 
         else:
             dic_logs['params'] = clf.get_params()
             added_params = [""]
             clf.fit(xtrain, ytrain)
 
-        if hasattr(clf, 'predict_proba'):
-            #This is a list (not matrix or else)
-            train_pred = clipProba(reshapePrediction(clf.predict_proba(xtrain)))
-            val_pred = clipProba(reshapePrediction(clf.predict_proba(xval)))
-        elif hasattr(clf, 'predict'):
-            #This is a list (not matrix or else)
-            train_pred = clipProba(reshapePrediction(clf.predict(xtrain)))
-            val_pred = clipProba(reshapePrediction(clf.predict(xval)))
+            if hasattr(clf, 'predict_proba'):
+
+                train_pred = reshapePrediction(clf.predict_proba(xtrain))
+                val_pred = reshapePrediction(clf.predict_proba(xval))
+                test_pred = reshapePrediction(clf.predict_proba(X_test))
+
+            elif hasattr(clf, 'predict'):
+
+                train_pred = reshapePrediction(clf.predict(xtrain))
+                val_pred = reshapePrediction(clf.predict(xval))
+                test_pred = reshapePrediction(clf.predict(X_test))
+
+
+        #filling blend datasets
+        blend_X_test_fold[:, fold_indice] = test_pred
 
         #metrics
         train_error = eval_func(ytrain, train_pred)
@@ -422,41 +486,27 @@ for clf_indice, data_clf in enumerate(clfs):
         print("train/val error: [{0:.4f}|{1:.4f}]".format(train_error, val_error))
         print(metrics.confusion_matrix(yval, val_pred.round()))
 
-        dic_logs['fold'].append(fold_indice)
-        dic_logs['ypredproba'].append(val_pred)
-        dic_logs['yval'].append(yval)
+        dic_logs['blend_X'][val_indices, 0] = val_pred
         dic_logs['train_error'].append(train_error)
         dic_logs['val_error'].append(val_error)
 
 
-    string_result = printResults(dic_logs)
-    filename += "{}_{}".format(''.join(added_params),string_result)
+    dic_logs['blend_X_test'][:, 0] = np.mean(blend_X_test_fold, axis = 1)
 
-    print(string_result)
+
+    string_result = printResults(dic_logs)
+    filename += "{}_{}".format(''.join(added_params), string_result)
+
     print(filename)
 
-    if STORE: saveDicLogs(dic_logs, CODE_FOLDER + 'diclogs/' + filename + '.p')
+    if STORE:
+        saveDicLogs(dic_logs, SAVE_FOLDER + filename + '.p')
 
-    if DOTEST:
+    #submission
+    y_test_pred = dic_logs['blend_X_test'][:, 0]
 
-        print('Test prediction...')
-        if clf_class_name == 'XGBClassifier' or 'XGBRegressor':
-            clf.n_estimators = np.mean(dic_logs['best_epoch']).astype(int)
-            print("Best n_estimators set to: ", clf.n_estimators)
-            clf.fit(X, Y)
+    output_filename = SAVE_FOLDER + filename + '.csv'
+    np.savetxt(output_filename, np.vstack((test_idx, y_test_pred)).T,
+               delimiter=',', fmt='%i,%.10f', header='ID,PredictedProb', comments="")
 
-        elif clf_class_name == 'NN':
-            clf.fit(X, Y)
 
-        else:
-            clf.fit(X, Y)
-
-        if hasattr(clf, 'predict_proba'):
-            ypredproba = clipProba(reshapePrediction(clf.predict_proba(X_test)))
-        elif hasattr(clf, 'predict'):
-            ypredproba = clipProba(reshapePrediction(clf.predict(X_test)))
-
-        output_filename = CODE_FOLDER + 'diclogs/' + filename + '.csv'
-        np.savetxt(output_filename, np.vstack((test_idx,ypredproba)).T, delimiter=',',
-                   fmt='%i,%.10f'  ,header='ID,PredictedProb', comments="")
-    del data_clf
