@@ -235,8 +235,10 @@ def models():
         'dropout': (0., 0.), 'optimizer': RMSprop(), 'nb_epoch': nb_epoch,
     }
     clfs = [
-    (D11, XGBClassifier(objective="binary:logistic" ,max_depth=10, learning_rate=0.01, subsample=.8, n_estimators=10000,nthread=nthread, seed=seed)),
-    (D11, XGBRegressor(objective="reg:linear" ,max_depth=10, learning_rate=0.01, subsample=.8, n_estimators=10000,nthread=nthread, seed=seed)),
+
+
+    (D11, XGBClassifier(objective="binary:logistic" ,max_depth=11, learning_rate=0.01, subsample=.9, n_estimators=10000, colsample_bytree=0.45, nthread=nthread, seed=seed)),
+    (D11, XGBRegressor(objective="reg:linear"  ,max_depth=11, learning_rate=0.01, subsample=.9, n_estimators=10000, colsample_bytree=0.45, nthread=nthread, seed=seed)),
     # (D1, NN(input_dim=D1[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2, loss='binary_crossentropy', class_mode='binary', **param1)),
     # (D3, NN(input_dim=D3[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2,loss='binary_crossentropy', class_mode='binary', **param1)),
     # (D5, NN(input_dim=D5[0].shape[1], output_dim=1, batch_size=batch_size, early_stopping_epoch=esr, verbose=2,loss='binary_crossentropy', class_mode='binary', **param1)),
@@ -276,7 +278,7 @@ def saveDicLogs(dic_logs, filename):
 CV = 'strat'
 STORE = True
 DOTEST = True
-n_folds = 10
+n_folds = 5
 test_size = 0.20
 nthread = 12
 seed = 123
